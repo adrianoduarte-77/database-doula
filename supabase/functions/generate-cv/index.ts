@@ -6,40 +6,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const systemPrompt = `Você é um especialista em criação de currículos personalizados estratégicos para o mercado brasileiro, seguindo o Método Perfil Glorioso.
+const systemPrompt = `Você é um especialista PREMIUM em criação de currículos personalizados estratégicos para o mercado brasileiro, seguindo o Método Perfil Glorioso.
 
-Você receberá:
-- experiences: experiências profissionais do CV atual do candidato
-- educacao: formação acadêmica e certificações do candidato
-- jobDescription: descrição da vaga alvo para personalização
+VOCÊ RECEBERÁ:
+1. experiences: As experiências profissionais REAIS do candidato (extraídas do CV dele)
+2. educacao: A formação acadêmica e certificações REAIS do candidato
+3. jobDescription: A descrição da vaga alvo para personalização
 
-Seu objetivo: Criar um currículo PERSONALIZADO para a vaga, reescrevendo as experiências para incluir palavras-chave da vaga SEM INVENTAR FATOS.
+SEU OBJETIVO PRINCIPAL:
+Reescrever as experiências profissionais do candidato MANTENDO todos os fatos reais (empresas, cargos, períodos), mas INSERINDO palavras-chave da vaga em cada bullet point.
 
-ESTRUTURA OBRIGATÓRIA DO CURRÍCULO:
+ESTRUTURA OBRIGATÓRIA DO CURRÍCULO (MÉTODO PERFIL GLORIOSO):
 
 1. SUMÁRIO (sumario):
    - paragrafos: 2 parágrafos de apresentação profissional mostrando senioridade e expertise
-   - bullets: exatamente 4-5 tópicos com resultados e conquistas principais
+   - bullets: EXATAMENTE 4 tópicos com RESULTADOS e CONQUISTAS quantificáveis
 
-2. SISTEMAS (sistemas): exatamente 4 ferramentas/sistemas que o candidato domina
+2. SISTEMAS (sistemas): EXATAMENTE 4 ferramentas/sistemas que o candidato domina (extrair do CV ou inferir da área)
 
-3. SKILLS (skills): exatamente 4 habilidades técnicas principais
+3. SKILLS (skills): EXATAMENTE 4 habilidades técnicas principais
 
-4. COMPETÊNCIAS (competencias): exatamente 4 competências comportamentais/soft skills
+4. COMPETÊNCIAS (competencias): EXATAMENTE 4 competências comportamentais/soft skills
 
-5. REALIZAÇÕES (realizacoes): exatamente 6 realizações com métricas e resultados quantificáveis
+5. REALIZAÇÕES (realizacoes): EXATAMENTE 6 realizações com MÉTRICAS e RESULTADOS quantificáveis
 
-6. EDUCAÇÃO (educacao): formação acadêmica e certificações (limpar duplicatas)
+6. EDUCAÇÃO (educacao): Formação acadêmica e certificações do candidato (usar os dados recebidos, limpar duplicatas)
 
-7. EXPERIÊNCIAS (experiencias): TODAS as experiências profissionais do candidato com bullets reescritos contendo palavras-chave da vaga
+7. EXPERIÊNCIAS (experiencias): TODAS as experiências profissionais do candidato com bullets REESCRITOS contendo palavras-chave da vaga
 
-REGRAS CRÍTICAS:
-- NUNCA omitir experiências do candidato - incluir TODAS
-- NUNCA inventar empresas, cargos, ferramentas ou resultados
-- Cada bullet de experiência deve conter ao menos 1 palavra-chave da vaga
-- Manter a estrutura: empresa, cargo, período, bullets
-- Reescrever bullets conectando as experiências reais às palavras-chave da vaga
-- Priorizar resultados quantificáveis (%, números, métricas)
+REGRAS CRÍTICAS ABSOLUTAS:
+- NUNCA omitir experiências do candidato - incluir TODAS as que foram enviadas
+- NUNCA inventar empresas, cargos, ferramentas ou resultados que não existam no CV original
+- CADA bullet de experiência DEVE conter ao menos 1 palavra-chave relevante da vaga
+- MANTER a estrutura exata: empresa, cargo, período, bullets
+- REESCREVER os bullets conectando as experiências REAIS às palavras-chave da vaga
+- PRIORIZAR resultados quantificáveis (%, números, métricas)
+- Se o CV original tiver poucos dados, MANTER o que tem e melhorar a redação
+
+EXEMPLO DE REESCRITA:
+Original: "Gerenciei equipe de vendas"
+Vaga pede: "liderança", "gestão de pessoas", "resultados"
+Reescrito: "Liderei equipe de vendas de 8 pessoas, implementando gestão de pessoas focada em resultados e atingindo 120% das metas trimestrais"
 
 IMPORTANTE: Responda APENAS via tool call, sem texto adicional.`;
 
@@ -68,23 +75,38 @@ serve(async (req) => {
 
     const userPrompt = `Esse é o meu CV atual:
 
-EXPERIÊNCIAS PROFISSIONAIS:
-${String(experiences).substring(0, 22000)}
+=== MINHAS EXPERIÊNCIAS PROFISSIONAIS ===
+${String(experiences).substring(0, 25000)}
 
-EDUCAÇÃO E QUALIFICAÇÕES:
-${String(educacao || "Não informado").substring(0, 12000)}
+=== MINHA EDUCAÇÃO E QUALIFICAÇÕES ===
+${String(educacao || "Não informado").substring(0, 15000)}
 
 ---
 
 Essa é a vaga na qual eu preciso enviar um CV personalizado:
 
-${String(jobDescription).substring(0, 22000)}
+=== DESCRIÇÃO DA VAGA ===
+${String(jobDescription).substring(0, 25000)}
 
 ---
 
-Baseado em minhas experiências e no que essa vaga pede, refaça minhas experiências respeitando minhas habilidades, ferramentas, conhecimentos e resultados entregues, mas que tenha presente em cada descrição de bullet point palavras-chaves que essa vaga pede.
+TAREFA:
+Baseado em minhas experiências REAIS e no que essa vaga pede, refaça minhas experiências respeitando minhas habilidades, ferramentas, conhecimentos e resultados entregues, mas inserindo em cada descrição de bullet point palavras-chaves que essa vaga pede.
 
-Crie o currículo completo seguindo a estrutura exata definida no schema da ferramenta.`;
+PRECISO QUE SEJA CRIADO SEGUINDO O MÉTODO PERFIL GLORIOSO:
+1. Sumário inicial com apresentação mostrando senioridade + 4 tópicos com resultados
+2. 4 Sistemas que domino
+3. 4 Skills que possuo
+4. 4 Competências principais que possuo
+5. 6 Realizações que tive
+6. Educação e qualificações (usar os dados que enviei)
+7. TODAS as minhas experiências profissionais REESCRITAS com palavras-chave da vaga
+
+REGRAS:
+- Use APENAS informações do meu CV real
+- NUNCA invente empresas ou cargos
+- REESCREVA os bullets com palavras-chave da vaga
+- MANTENHA TODAS as experiências que enviei`;
 
     const toolSchema = {
       type: "function",
