@@ -1,15 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield } from "lucide-react";
+import logoAD from "@/assets/logo-ad.png";
 
 const Admin = () => {
   const navigate = useNavigate();
   
   return (
     <div className="min-h-screen bg-background p-6">
-      <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 mb-6">
-        <ArrowLeft className="w-4 h-4" /> Voltar
-      </Button>
+      {/* Header with logo and back button */}
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </Button>
+        <img
+          src={logoAD}
+          alt="AD Logo"
+          className="w-10 h-10 rounded-lg"
+        />
+      </div>
+      
       <div className="max-w-4xl mx-auto text-center py-20">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
           <Shield className="w-8 h-8 text-primary" />

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoAD from "@/assets/logo-ad.png";
 
 const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
   <div className={`flex items-center gap-1.5 text-[10px] transition-colors duration-200 ${met ? 'text-primary' : 'text-muted-foreground/60'}`}>
@@ -153,9 +154,11 @@ const Auth = () => {
       >
         {/* Logo */}
         <motion.div variants={itemVariants} className="flex justify-center mb-8">
-          <div className="text-2xl font-display font-bold text-gradient">
-            Perfil Glorioso
-          </div>
+          <img
+            src={logoAD}
+            alt="AD Logo"
+            className="w-16 h-16 rounded-lg"
+          />
         </motion.div>
 
         {/* Card - Fixed dimensions */}
