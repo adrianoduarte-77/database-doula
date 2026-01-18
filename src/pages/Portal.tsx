@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
 import logoAD from "@/assets/logo-ad.png";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
+import mentorPhoto from "@/assets/mentor-photo.png";
 
 import { StageWarningModal } from "@/components/StageWarningModal";
 import WelcomeMentorModal from "@/components/WelcomeMentorModal";
