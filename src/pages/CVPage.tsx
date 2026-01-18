@@ -79,20 +79,17 @@ const CVPage = () => {
     fetchData();
   }, [user]);
 
-  // Check if user has all 3 document types
+  // Check if user has all document types
+  // CV Personalizado has: sumario, sistemas, skills, competencias, realizacoes
   const hasPersonalizedCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
-    return data?.sumario && !data?.isATS;
+    return data?.sumario && data?.sistemas && data?.skills;
   });
 
+  // CV ATS has: nacionalidade, idade, idiomas, localizacao (fields unique to ATS)
   const hasATSCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
-    return data?.isATS === true;
-  });
-
-  const hasCoverLetter = savedCVs.some(cv => {
-    const data = cv.cv_data as any;
-    return data?.isCoverLetter === true;
+    return data?.nacionalidade !== undefined || data?.idiomas !== undefined;
   });
 
   const hasAllDocuments = hasPersonalizedCV && hasATSCV;
