@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CoverLetterData, CoverLetterModel } from "@/types/cover-letter";
-import { ArrowLeft, Copy, Check, FileText, Target, Wrench, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Check, FileText, Target, Wrench, Sparkles, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
 interface CoverLetterPreviewProps {
   data: CoverLetterData;
   onBack: () => void;
+  onSave?: () => void;
 }
 
 const modelIcons = {
@@ -26,7 +27,7 @@ const modelLabels = {
 
 type ModelType = 'completa' | 'objetiva' | 'tecnica';
 
-export function CoverLetterPreview({ data, onBack }: CoverLetterPreviewProps) {
+export function CoverLetterPreview({ data, onBack, onSave }: CoverLetterPreviewProps) {
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<ModelType>(data.modelos[0]?.tipo || "completa");
@@ -57,9 +58,17 @@ export function CoverLetterPreview({ data, onBack }: CoverLetterPreviewProps) {
           <ArrowLeft className="w-4 h-4" />
           Voltar
         </Button>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Sparkles className="w-4 h-4 text-primary" />
-          3 modelos gerados
+        <div className="flex items-center gap-3">
+          {onSave && (
+            <Button variant="outline" size="sm" onClick={onSave} className="gap-2">
+              <Save className="w-4 h-4" />
+              Salvar Carta
+            </Button>
+          )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="w-4 h-4 text-primary" />
+            3 modelos gerados
+          </div>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import Portal from "./pages/Portal";
 import CVPage from "./pages/CVPage";
 import Auth from "./pages/Auth";
 import MeusCVs from "./pages/MeusCVs";
+import MinhasCartas from "./pages/MinhasCartas";
 import StagePage from "./pages/StagePage";
 import Stage1Page from "./pages/Stage1Page";
 import Stage3Page from "./pages/Stage3Page";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/ativar" element={<ActivatePlatform />} />
             <Route path="/meus-cvs" element={<MeusCVs />} />
+            <Route path="/minhas-cartas" element={<MinhasCartas />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/suporte" element={<SupportPage />} />
             <Route path="/etapa/1" element={<Stage1Page />} />
