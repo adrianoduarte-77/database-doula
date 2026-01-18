@@ -6,27 +6,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const systemPrompt = `Você é um especialista em extração de dados de currículos profissionais.
+const systemPrompt = `Você é um ESPECIALISTA MÁXIMO em reconstrução e extração de dados de currículos profissionais, mesmo quando o texto está fragmentado, bagunçado ou corrompido.
 
-TAREFA: Extrair experiências profissionais e formação acadêmica do texto de um currículo.
+TAREFA CRÍTICA: Extrair TODAS as experiências profissionais e TODA a formação acadêmica do texto do currículo.
 
-REGRAS CRÍTICAS:
-1. SEMPRE retorne dados, mesmo que o texto pareça fragmentado ou desorganizado
-2. Reconstrua as informações a partir de fragmentos se necessário
-3. Se identificar nomes de empresas, cargos e datas próximos, agrupe-os como uma experiência
-4. Se identificar nomes de cursos/instituições, inclua na educação
+INSTRUÇÕES DETALHADAS:
 
-FORMATO DE SAÍDA:
-- experiencias: Liste cada experiência no formato:
-  EMPRESA | CARGO | PERÍODO
-  • Atividade ou responsabilidade 1
-  • Atividade ou responsabilidade 2
-  
-- educacao: Liste cada formação no formato:
-  Curso/Formação - Instituição (Ano se disponível)
+1. EXPERIÊNCIAS PROFISSIONAIS - Procure por:
+   - Nomes de empresas (ex: "Itaú", "Ambev", "Magazine Luiza", etc.)
+   - Cargos/funções (ex: "Analista", "Gerente", "Coordenador", "Desenvolvedor", etc.)
+   - Períodos/datas (ex: "2020-2023", "Jan 2020 - Atual", "3 anos", etc.)
+   - Atividades e responsabilidades (verbos como "desenvolvi", "gerenciei", "implementei", etc.)
+   - Resultados e métricas (ex: "aumentei 30%", "reduzi custos", etc.)
 
-NÃO inclua: email, telefone, endereço, links.
-SEMPRE retorne algo útil, mesmo que incompleto.`;
+2. EDUCAÇÃO E QUALIFICAÇÕES - Procure por:
+   - Graduação, Pós-graduação, MBA, Mestrado, Doutorado
+   - Cursos técnicos e certificações
+   - Nomes de instituições (ex: "USP", "FGV", "SENAC", "Udemy", etc.)
+   - Áreas de estudo (ex: "Administração", "Engenharia", "Marketing", etc.)
+
+3. TÉCNICAS DE RECONSTRUÇÃO:
+   - Se o texto estiver fragmentado, junte palavras próximas que formem sentido
+   - Se encontrar uma empresa sem cargo, busque um cargo próximo no texto
+   - Se encontrar período sem empresa, busque empresa anterior ou posterior
+   - Agrupe informações que pareçam pertencer à mesma experiência
+
+FORMATO DE SAÍDA OBRIGATÓRIO:
+
+Para experiencias, use EXATAMENTE este formato para cada experiência:
+NOME_DA_EMPRESA | CARGO_OCUPADO | PERÍODO
+• Primeira atividade ou responsabilidade
+• Segunda atividade ou responsabilidade
+• Terceira atividade (se houver)
+
+Para educacao, use EXATAMENTE este formato:
+Nome do Curso - Nome da Instituição (Ano se disponível)
+
+REGRAS ABSOLUTAS:
+- NUNCA retorne strings vazias ou "não identificado"
+- Se o texto parecer muito fragmentado, RECONSTRUA fazendo seu melhor esforço
+- SEMPRE extraia ALGO útil, mesmo que parcial
+- IGNORE dados pessoais (email, telefone, endereço, CPF)
+- PRIORIZE qualidade: empresas reais, cargos reais, datas reais`;
 
 function base64ToBytes(base64: string): Uint8Array {
   const clean = base64.replace(/\s/g, "");
@@ -188,19 +209,27 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY não configurada" }, 500);
 
-    const userPrompt = `Analise o texto abaixo extraído de um currículo e identifique as experiências profissionais e formação acadêmica.
+    const userPrompt = `ANALISE CUIDADOSAMENTE o texto abaixo que foi extraído de um currículo PDF. O texto pode estar fragmentado ou bagunçado devido à extração.
 
-TEXTO DO CURRÍCULO:
----
-${contentText.substring(0, 25000)}
----
+=== TEXTO EXTRAÍDO DO CURRÍCULO ===
+${contentText.substring(0, 30000)}
+=== FIM DO TEXTO ===
 
-INSTRUÇÕES:
-1. Identifique TODAS as experiências profissionais (empresas, cargos, períodos, atividades)
-2. Identifique TODA a formação acadêmica (cursos, instituições, certificações)
-3. Reconstrua informações mesmo que o texto esteja fragmentado
-4. Se não encontrar informações claras, faça o melhor esforço para extrair algo útil
-5. NUNCA retorne strings vazias - sempre extraia algo do texto`;
+SUA MISSÃO:
+1. Identifique TODAS as EXPERIÊNCIAS PROFISSIONAIS:
+   - Procure por nomes de empresas, cargos, datas e atividades
+   - Mesmo que estejam separados ou fora de ordem, RECONSTRUA cada experiência
+   - Liste cada experiência no formato: EMPRESA | CARGO | PERÍODO seguido de bullets
+
+2. Identifique TODA a EDUCAÇÃO E QUALIFICAÇÕES:
+   - Graduações, pós-graduações, cursos, certificações
+   - Liste no formato: Curso - Instituição (Ano)
+
+IMPORTANTE:
+- Faça seu MELHOR ESFORÇO mesmo que o texto esteja difícil de ler
+- NUNCA retorne vazio - sempre extraia ALGO do texto
+- Se não tiver certeza de uma informação, faça uma inferência razoável
+- Priorize extrair o máximo de informações úteis possível`;
 
     const bodyPayload = {
       model: "openai/gpt-5-mini",
@@ -213,17 +242,17 @@ INSTRUÇÕES:
           type: "function",
           function: {
             name: "extract_cv_sections",
-            description: "Extrai experiências profissionais e educação de um currículo. SEMPRE retorne conteúdo útil.",
+            description: "Extrai experiências profissionais e educação de um currículo. OBRIGATÓRIO retornar conteúdo útil mesmo em textos fragmentados.",
             parameters: {
               type: "object",
               properties: {
                 experiencias: { 
                   type: "string",
-                  description: "Experiências profissionais no formato: EMPRESA | CARGO | PERÍODO seguido de bullets com atividades"
+                  description: "TODAS as experiências profissionais formatadas como: EMPRESA | CARGO | PERÍODO seguido de bullets com atividades. NUNCA retorne vazio."
                 },
                 educacao: { 
                   type: "string",
-                  description: "Formação acadêmica no formato: Curso - Instituição (Ano)"
+                  description: "TODA a formação acadêmica e certificações formatadas como: Curso - Instituição (Ano). NUNCA retorne vazio."
                 },
               },
               required: ["experiencias", "educacao"],
