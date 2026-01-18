@@ -1,11 +1,9 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
-  ChevronUp,
   Check,
-  Copy,
   ArrowLeft,
   GraduationCap,
   Briefcase,
@@ -13,193 +11,209 @@ import {
   Award,
   Lightbulb,
   FileText,
-  CheckCircle2,
-  AlertCircle,
-  Info,
+  Plus,
+  Trash2,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { SupportButton } from "@/components/SupportButton";
 import { MentorAvatar } from "@/components/MentorAvatar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import logoAD from "@/assets/logo-ad.png";
 
-interface GupySectionProps {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  tips: string[];
-  warnings: string[];
-  copyTexts?: { label: string; text: string }[];
-  checklistItems: { id: string; label: string }[];
+interface GupyData {
+  cursos: { nome: string; status: string }[];
+  experiencias: { empresa: string; cargo: string; descricao: string }[];
+  idiomas: { idioma: string; nivel: string }[];
+  certificados: { tipo: string; titulo: string }[];
+  habilidades: string[];
+  sobre: string;
 }
 
-const GUPY_SECTIONS: GupySectionProps[] = [
-  {
-    id: "experiencia-academica",
-    title: "Experiência Acadêmica",
-    icon: GraduationCap,
-    tips: [
-      "O nome do curso precisa ser simples e direto.",
-      "Remova vírgulas, hífens ou textos longos do nome do curso.",
-      'Por exemplo: "MBA em Big Data para Negócios" → "Inteligência Artificial"',
-      "Clique no nome do curso para editar diretamente na Gupy.",
-    ],
-    warnings: [
-      "Não precisa remover o antigo — só edite o nome para ficar mais curto.",
-      "Nomes simplificados ajudam o ATS a encontrar palavras-chave.",
-    ],
-    checklistItems: [
-      { id: "edu-1", label: "Simplifiquei os nomes dos cursos" },
-      { id: "edu-2", label: "Removi vírgulas e hífens" },
-      { id: "edu-3", label: "Todos os cursos estão com nomes curtos e diretos" },
-    ],
-  },
-  {
-    id: "experiencia-profissional",
-    title: "Experiência Profissional",
-    icon: Briefcase,
-    tips: [
-      "Copie exatamente o que está no LinkedIn — título, descrição, tudo igual.",
-      "A diferença é: nada de caractere especial.",
-      "Sem bolinha preta (•), sem sinal de maior (>), sem emojis.",
-      'Porcentagem sempre por extenso: "36%" vira "trinta e seis por cento".',
-      "Apague tudo que tinha antes e refaça igual ao LinkedIn.",
-    ],
-    warnings: [
-      "Caracteres especiais fazem o ATS não ler seu currículo corretamente.",
-      "O texto deve ser limpo, apenas letras e números.",
-    ],
-    checklistItems: [
-      { id: "exp-1", label: "Copiei todas as experiências do LinkedIn" },
-      { id: "exp-2", label: "Removi todos os caracteres especiais (•, >, ♦)" },
-      { id: "exp-3", label: "Escrevi porcentagens por extenso" },
-      { id: "exp-4", label: "Removi emojis se havia algum" },
-    ],
-  },
-  {
-    id: "idiomas",
-    title: "Idiomas",
-    icon: Languages,
-    tips: [
-      "Adicione todos os idiomas que você domina.",
-      "Seja honesto com o nível de cada idioma.",
-      "Idiomas são filtros importantes para vagas internacionais.",
-    ],
-    warnings: [
-      "Nunca minta sobre fluência — você pode ser testado na entrevista.",
-    ],
-    checklistItems: [
-      { id: "lang-1", label: "Adicionei todos os idiomas que falo" },
-      { id: "lang-2", label: "Coloquei o nível correto de cada um" },
-    ],
-  },
-  {
-    id: "conquistas-certificados",
-    title: "Conquistas ou Certificados",
-    icon: Award,
-    tips: [
-      "Informe sobre cursos, trabalho voluntário e reconhecimentos.",
-      "Use nomes simples e diretos para os cursos.",
-      "Certificações importantes como AWS, Google, Microsoft devem estar aqui.",
-    ],
-    warnings: [
-      "Cursos online gratuitos também contam — adicione todos relevantes.",
-      "Mantenha os títulos sem caracteres especiais.",
-    ],
-    checklistItems: [
-      { id: "cert-1", label: "Adicionei meus certificados e cursos" },
-      { id: "cert-2", label: "Os títulos estão simplificados" },
-      { id: "cert-3", label: "Removi caracteres especiais dos títulos" },
-    ],
-  },
-  {
-    id: "habilidades",
-    title: "Habilidades",
-    icon: Lightbulb,
-    tips: [
-      "Remove todas as habilidades atuais na Gupy.",
-      "Adicione as 30 principais competências do seu LinkedIn.",
-      "Vá no perfil do LinkedIn → seção 'Competências'.",
-      "Copie e cole cada competência uma por uma na Gupy.",
-    ],
-    warnings: [
-      "A Gupy permite até 30 habilidades — use todas!",
-      "Quanto mais habilidades relevantes, maior seu score no ATS.",
-    ],
-    checklistItems: [
-      { id: "skill-1", label: "Removi as habilidades antigas da Gupy" },
-      { id: "skill-2", label: "Copiei minhas competências do LinkedIn" },
-      { id: "skill-3", label: "Adicionei pelo menos 20 habilidades" },
-      { id: "skill-4", label: "Tentei chegar nas 30 habilidades" },
-    ],
-  },
-  {
-    id: "personalizar-candidatura",
-    title: "Personalizar Candidatura",
-    icon: FileText,
-    tips: [
-      "Após se candidatar a uma vaga, aparece 'Personalizar candidatura'.",
-      "Ali você vai colar o texto 'Sobre' do LinkedIn que criamos.",
-      "Esse texto faz toda diferença para o recrutador!",
-    ],
-    warnings: [
-      "Faça isso para CADA vaga que você se candidatar.",
-      "O texto personalizado aumenta muito suas chances.",
-    ],
-    checklistItems: [
-      { id: "custom-1", label: "Sei onde fica o campo 'Personalizar candidatura'" },
-      { id: "custom-2", label: "Tenho meu texto 'Sobre' do LinkedIn pronto para colar" },
-    ],
-  },
-];
+const initialData: GupyData = {
+  cursos: [{ nome: "", status: "Concluído" }],
+  experiencias: [{ empresa: "", cargo: "", descricao: "" }],
+  idiomas: [{ idioma: "", nivel: "Intermediário" }],
+  certificados: [{ tipo: "Curso", titulo: "" }],
+  habilidades: [],
+  sobre: "",
+};
+
+const TIPS = {
+  cursos: "Simplifique: 'MBA em Big Data' → 'Inteligência Artificial'. Sem vírgulas ou hífens.",
+  experiencias: "Copie do LinkedIn. Sem caracteres especiais (•, >, ♦). Porcentagem por extenso.",
+  idiomas: "Seja honesto com o nível — você pode ser testado.",
+  certificados: "Inclua cursos online, certificações AWS, Google, etc.",
+  habilidades: "Adicione as 30 competências do LinkedIn, uma por uma.",
+  sobre: "Cole aqui o texto 'Sobre' do LinkedIn para usar ao personalizar candidaturas.",
+};
 
 export const GupyGuide = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [expandedSections, setExpandedSections] = useState<string[]>(["experiencia-academica"]);
+  const { user } = useAuth();
+  const [data, setData] = useState<GupyData>(initialData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>("cursos");
+  const [newHabilidade, setNewHabilidade] = useState("");
 
-  const handleCopy = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Copiado!",
-        description: `${label} copiado para a área de transferência.`,
-      });
-    } catch (err) {
-      toast({
-        title: "Erro ao copiar",
-        description: "Não foi possível copiar o texto.",
-        variant: "destructive",
-      });
+  // Load saved data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.id) return;
+      
+      const { data: savedData } = await supabase
+        .from("collected_data")
+        .select("data_content")
+        .eq("user_id", user.id)
+        .eq("data_type", "gupy_cv")
+        .maybeSingle();
+
+      if (savedData?.data_content) {
+        setData(savedData.data_content as unknown as GupyData);
+      }
+      setLoading(false);
+    };
+    loadData();
+  }, [user?.id]);
+
+  // Save data
+  const saveData = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    
+    // Check if record exists
+    const { data: existing } = await supabase
+      .from("collected_data")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("data_type", "gupy_cv")
+      .maybeSingle();
+
+    const jsonData = JSON.parse(JSON.stringify(data));
+
+    if (existing) {
+      await supabase
+        .from("collected_data")
+        .update({
+          data_content: jsonData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+    } else {
+      await supabase
+        .from("collected_data")
+        .insert([{
+          user_id: user.id,
+          data_type: "gupy_cv",
+          data_content: jsonData,
+          stage_number: 6,
+        }]);
+    }
+
+    setSaving(false);
+    toast({ title: "Salvo!", description: "Suas alterações foram salvas." });
+  };
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
+  const addItem = (field: keyof GupyData) => {
+    const templates: Record<string, any> = {
+      cursos: { nome: "", status: "Concluído" },
+      experiencias: { empresa: "", cargo: "", descricao: "" },
+      idiomas: { idioma: "", nivel: "Intermediário" },
+      certificados: { tipo: "Curso", titulo: "" },
+    };
+    setData({ ...data, [field]: [...(data[field] as any[]), templates[field]] });
+  };
+
+  const removeItem = (field: keyof GupyData, index: number) => {
+    const arr = [...(data[field] as any[])];
+    arr.splice(index, 1);
+    setData({ ...data, [field]: arr });
+  };
+
+  const updateItem = (field: keyof GupyData, index: number, key: string, value: string) => {
+    const arr = [...(data[field] as any[])];
+    arr[index] = { ...arr[index], [key]: value };
+    setData({ ...data, [field]: arr });
+  };
+
+  const addHabilidade = () => {
+    if (newHabilidade.trim() && data.habilidades.length < 30) {
+      setData({ ...data, habilidades: [...data.habilidades, newHabilidade.trim()] });
+      setNewHabilidade("");
     }
   };
 
-  const toggleCheck = (itemId: string) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
+  const removeHabilidade = (index: number) => {
+    const arr = [...data.habilidades];
+    arr.splice(index, 1);
+    setData({ ...data, habilidades: arr });
   };
 
-  const getSectionProgress = (section: GupySectionProps) => {
-    const total = section.checklistItems.length;
-    const completed = section.checklistItems.filter(
-      (item) => checkedItems[item.id]
-    ).length;
-    return { completed, total };
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  const getTotalProgress = () => {
-    const allItems = GUPY_SECTIONS.flatMap((s) => s.checklistItems);
-    const completed = allItems.filter((item) => checkedItems[item.id]).length;
-    return { completed, total: allItems.length };
+  const Section = ({ 
+    id, 
+    title, 
+    icon: Icon, 
+    tip, 
+    children 
+  }: { 
+    id: string; 
+    title: string; 
+    icon: React.ElementType; 
+    tip: string;
+    children: React.ReactNode;
+  }) => {
+    const isOpen = openSection === id;
+    return (
+      <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <button
+          onClick={() => toggleSection(id)}
+          className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
+            <span className="font-medium">{title}</span>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+        
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 pb-4"
+          >
+            <p className="text-xs text-muted-foreground mb-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+              💡 {tip}
+            </p>
+            {children}
+          </motion.div>
+        )}
+      </div>
+    );
   };
-
-  const progress = getTotalProgress();
 
   return (
     <div className="min-h-screen bg-background">
@@ -207,256 +221,228 @@ export const GupyGuide = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="shrink-0"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <img src={logoAD} alt="Logo" className="w-8 h-8 rounded-lg" />
             <div>
               <h1 className="text-lg font-semibold">Estratégias Gupy</h1>
-              <p className="text-xs text-muted-foreground">
-                Etapa 6 • Otimização ATS
-              </p>
+              <p className="text-xs text-muted-foreground">Etapa 6</p>
             </div>
           </div>
-          <SupportButton />
-        </div>
-
-        {/* Progress Bar */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-primary rounded-full"
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${(progress.completed / progress.total) * 100}%`,
-                }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground">
-              {progress.completed}/{progress.total}
-            </span>
+          <div className="flex items-center gap-2">
+            <Button onClick={saveData} disabled={saving} size="sm" className="gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Salvar
+            </Button>
+            <SupportButton />
           </div>
         </div>
       </header>
 
       {/* Mentor Intro */}
-      <div className="px-4 py-6">
-        <Card className="bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <MentorAvatar size="md" className="shrink-0" />
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Seu mentor</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Agora vamos otimizar seu currículo da Gupy para passar no ATS.
-                  Siga cada seção abaixo — ela replica exatamente o layout da
-                  Gupy. Complete o checklist de cada seção e você estará pronto!
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gupy Layout Sections */}
-      <div className="px-4 pb-8 space-y-4">
-        {/* Header like Gupy */}
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold">Meu currículo</h2>
+      <div className="p-4">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20">
+          <MentorAvatar size="sm" />
           <p className="text-sm text-muted-foreground">
-            Preencha os blocos com seus dados e mantenha seu currículo
-            atualizado para se candidatar às vagas. Caso realize alterações,
-            estes ajustes serão{" "}
-            <strong>replicados para todas as suas candidaturas ativas.</strong>
+            Preencha cada seção abaixo como você vai colocar na Gupy. Clique em <strong>Salvar</strong> para não perder seu progresso.
           </p>
         </div>
-
-        {/* Sections */}
-        <Accordion
-          type="multiple"
-          value={expandedSections}
-          onValueChange={setExpandedSections}
-          className="space-y-3"
-        >
-          {GUPY_SECTIONS.map((section) => {
-            const sectionProgress = getSectionProgress(section);
-            const isComplete =
-              sectionProgress.completed === sectionProgress.total;
-
-            return (
-              <AccordionItem
-                key={section.id}
-                value={section.id}
-                className="border rounded-lg bg-card overflow-hidden"
-              >
-                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
-                  <div className="flex items-center gap-3 flex-1">
-                    <section.icon className="w-5 h-5 text-primary" />
-                    <span className="font-medium">{section.title}</span>
-                    {isComplete ? (
-                      <Badge
-                        variant="default"
-                        className="bg-green-500/20 text-green-500 border-green-500/30 ml-2"
-                      >
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Concluído
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="ml-2 text-muted-foreground"
-                      >
-                        {sectionProgress.completed}/{sectionProgress.total}
-                      </Badge>
-                    )}
-                  </div>
-                </AccordionTrigger>
-
-                <AccordionContent className="px-4 pb-4">
-                  <div className="space-y-4 pt-2">
-                    {/* Tips */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                        <Info className="w-4 h-4" />
-                        <span>Orientações do Mentor</span>
-                      </div>
-                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
-                        {section.tips.map((tip, index) => (
-                          <p
-                            key={index}
-                            className="text-sm text-foreground/80 flex items-start gap-2"
-                          >
-                            <span className="text-primary mt-1">•</span>
-                            {tip}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Warnings */}
-                    {section.warnings.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium text-amber-500">
-                          <AlertCircle className="w-4 h-4" />
-                          <span>Atenção</span>
-                        </div>
-                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 space-y-2">
-                          {section.warnings.map((warning, index) => (
-                            <p
-                              key={index}
-                              className="text-sm text-foreground/80 flex items-start gap-2"
-                            >
-                              <span className="text-amber-500 mt-1">!</span>
-                              {warning}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Checklist */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <Check className="w-4 h-4" />
-                        <span>Checklist</span>
-                      </div>
-                      <div className="space-y-2">
-                        {section.checklistItems.map((item) => (
-                          <label
-                            key={item.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                          >
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                                checkedItems[item.id]
-                                  ? "bg-primary border-primary"
-                                  : "border-muted-foreground/30"
-                              }`}
-                              onClick={() => toggleCheck(item.id)}
-                            >
-                              {checkedItems[item.id] && (
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              )}
-                            </div>
-                            <span
-                              className={`text-sm flex-1 ${
-                                checkedItems[item.id]
-                                  ? "text-muted-foreground line-through"
-                                  : ""
-                              }`}
-                            >
-                              {item.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Copy Buttons */}
-                    {section.copyTexts && section.copyTexts.length > 0 && (
-                      <div className="space-y-2 pt-2">
-                        {section.copyTexts.map((copyItem, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-start gap-2"
-                            onClick={() =>
-                              handleCopy(copyItem.text, copyItem.label)
-                            }
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copiar {copyItem.label}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-
-        {/* Completion Card */}
-        <AnimatePresence>
-          {progress.completed === progress.total && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card className="bg-gradient-to-br from-green-500/10 to-primary/5 border-green-500/30">
-                <CardContent className="p-6 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-500">
-                      Parabéns! 🎉
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Você completou todas as otimizações da Gupy. Seu currículo
-                      está pronto para passar no ATS!
-                    </p>
-                  </div>
-                  <Button onClick={() => navigate("/")} className="gap-2">
-                    Voltar ao Portal
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Sections */}
+      <div className="p-4 space-y-3">
+        {/* Cursos */}
+        <Section id="cursos" title="Experiência Acadêmica" icon={GraduationCap} tip={TIPS.cursos}>
+          <div className="space-y-3">
+            {data.cursos.map((item, i) => (
+              <div key={i} className="flex gap-2">
+                <Input
+                  placeholder="Nome do curso simplificado"
+                  value={item.nome}
+                  onChange={(e) => updateItem("cursos", i, "nome", e.target.value)}
+                  className="flex-1"
+                />
+                <select
+                  value={item.status}
+                  onChange={(e) => updateItem("cursos", i, "status", e.target.value)}
+                  className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+                >
+                  <option>Concluído</option>
+                  <option>Em andamento</option>
+                  <option>Trancado</option>
+                </select>
+                {data.cursos.length > 1 && (
+                  <Button variant="ghost" size="icon" onClick={() => removeItem("cursos", i)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => addItem("cursos")} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar curso
+            </Button>
+          </div>
+        </Section>
+
+        {/* Experiências */}
+        <Section id="experiencias" title="Experiência Profissional" icon={Briefcase} tip={TIPS.experiencias}>
+          <div className="space-y-4">
+            {data.experiencias.map((item, i) => (
+              <div key={i} className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Empresa"
+                    value={item.empresa}
+                    onChange={(e) => updateItem("experiencias", i, "empresa", e.target.value)}
+                  />
+                  <Input
+                    placeholder="Cargo"
+                    value={item.cargo}
+                    onChange={(e) => updateItem("experiencias", i, "cargo", e.target.value)}
+                  />
+                  {data.experiencias.length > 1 && (
+                    <Button variant="ghost" size="icon" onClick={() => removeItem("experiencias", i)}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+                <Textarea
+                  placeholder="Descrição das atividades (sem caracteres especiais)"
+                  value={item.descricao}
+                  onChange={(e) => updateItem("experiencias", i, "descricao", e.target.value)}
+                  rows={3}
+                />
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => addItem("experiencias")} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar experiência
+            </Button>
+          </div>
+        </Section>
+
+        {/* Idiomas */}
+        <Section id="idiomas" title="Idiomas" icon={Languages} tip={TIPS.idiomas}>
+          <div className="space-y-3">
+            {data.idiomas.map((item, i) => (
+              <div key={i} className="flex gap-2">
+                <Input
+                  placeholder="Idioma"
+                  value={item.idioma}
+                  onChange={(e) => updateItem("idiomas", i, "idioma", e.target.value)}
+                  className="flex-1"
+                />
+                <select
+                  value={item.nivel}
+                  onChange={(e) => updateItem("idiomas", i, "nivel", e.target.value)}
+                  className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+                >
+                  <option>Básico</option>
+                  <option>Intermediário</option>
+                  <option>Avançado</option>
+                  <option>Fluente</option>
+                  <option>Nativo</option>
+                </select>
+                {data.idiomas.length > 1 && (
+                  <Button variant="ghost" size="icon" onClick={() => removeItem("idiomas", i)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => addItem("idiomas")} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar idioma
+            </Button>
+          </div>
+        </Section>
+
+        {/* Certificados */}
+        <Section id="certificados" title="Conquistas e Certificados" icon={Award} tip={TIPS.certificados}>
+          <div className="space-y-3">
+            {data.certificados.map((item, i) => (
+              <div key={i} className="flex gap-2">
+                <select
+                  value={item.tipo}
+                  onChange={(e) => updateItem("certificados", i, "tipo", e.target.value)}
+                  className="px-3 py-2 rounded-md border border-input bg-background text-sm w-32"
+                >
+                  <option>Curso</option>
+                  <option>Certificação</option>
+                  <option>Voluntário</option>
+                  <option>Prêmio</option>
+                </select>
+                <Input
+                  placeholder="Título"
+                  value={item.titulo}
+                  onChange={(e) => updateItem("certificados", i, "titulo", e.target.value)}
+                  className="flex-1"
+                />
+                {data.certificados.length > 1 && (
+                  <Button variant="ghost" size="icon" onClick={() => removeItem("certificados", i)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => addItem("certificados")} className="gap-2">
+              <Plus className="w-4 h-4" /> Adicionar certificado
+            </Button>
+          </div>
+        </Section>
+
+        {/* Habilidades */}
+        <Section id="habilidades" title="Habilidades" icon={Lightbulb} tip={TIPS.habilidades}>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite uma habilidade"
+                value={newHabilidade}
+                onChange={(e) => setNewHabilidade(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addHabilidade()}
+                className="flex-1"
+              />
+              <Button onClick={addHabilidade} disabled={data.habilidades.length >= 30}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">{data.habilidades.length}/30 habilidades</p>
+            <div className="flex flex-wrap gap-2">
+              {data.habilidades.map((hab, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm"
+                >
+                  {hab}
+                  <button onClick={() => removeHabilidade(i)} className="hover:text-destructive">
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        {/* Sobre */}
+        <Section id="sobre" title="Personalizar Candidatura" icon={FileText} tip={TIPS.sobre}>
+          <Textarea
+            placeholder="Cole aqui seu texto 'Sobre' do LinkedIn..."
+            value={data.sobre}
+            onChange={(e) => setData({ ...data, sobre: e.target.value })}
+            rows={6}
+          />
+        </Section>
+      </div>
+
+      {/* Fixed Save Button */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
+        <Button onClick={saveData} disabled={saving} className="w-full gap-2">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          Salvar Alterações
+        </Button>
+      </div>
+
+      {/* Bottom padding for fixed button */}
+      <div className="h-20" />
     </div>
   );
 };
