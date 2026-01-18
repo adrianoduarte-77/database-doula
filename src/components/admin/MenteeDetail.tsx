@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, Save, FileText, Target, CheckCircle, Eye, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Save, FileText, Target, CheckCircle, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MenteeDetailProps {
@@ -90,6 +90,123 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDiagnosticFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingDiagnostic(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${menteeId}/linkedin-diagnostic-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('mentee-files')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('mentee-files')
+        .getPublicUrl(fileName);
+
+      // Create or update diagnostic
+      if (diagnostic) {
+        await supabase
+          .from('linkedin_diagnostics')
+          .update({
+            pdf_url: publicUrl,
+            title: diagnosticTitle,
+            notes: diagnosticNotes,
+          })
+          .eq('id', diagnostic.id);
+      } else {
+        await supabase
+          .from('linkedin_diagnostics')
+          .insert({
+            user_id: menteeId,
+            pdf_url: publicUrl,
+            title: diagnosticTitle,
+            notes: diagnosticNotes,
+            created_by: user.id,
+          });
+      }
+
+      toast({
+        title: "PDF enviado!",
+        description: "O diagnóstico foi salvo com sucesso.",
+      });
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingDiagnostic(false);
+    }
+  };
+
+  const handleFunnelFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingFunnel(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${menteeId}/opportunity-funnel-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('mentee-files')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('mentee-files')
+        .getPublicUrl(fileName);
+
+      // Create or update funnel
+      if (funnel) {
+        await supabase
+          .from('opportunity_funnels')
+          .update({
+            pdf_url: publicUrl,
+            title: funnelTitle,
+            notes: funnelNotes,
+          })
+          .eq('id', funnel.id);
+      } else {
+        await supabase
+          .from('opportunity_funnels')
+          .insert({
+            user_id: menteeId,
+            pdf_url: publicUrl,
+            title: funnelTitle,
+            notes: funnelNotes,
+            content: { text: '' },
+            created_by: user.id,
+          });
+      }
+
+      toast({
+        title: "PDF enviado!",
+        description: "O funil foi salvo com sucesso.",
+      });
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Erro no upload",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingFunnel(false);
     }
   };
 
@@ -193,8 +310,8 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="text-center py-12 text-muted-foreground">
+        Carregando...
       </div>
     );
   }
@@ -207,41 +324,43 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h2 className="text-2xl font-display font-bold text-foreground">
+          <h2 className="text-xl font-display font-bold text-foreground">
             {menteeName}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Gerenciar entregáveis
+            Gerenciar entregáveis do mentorado
           </p>
         </div>
       </div>
 
-      {/* LinkedIn Diagnostic Section */}
+      {/* LinkedIn Diagnostic - Stage 1 */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border rounded-xl p-6 space-y-4"
+        className="glass-card rounded-xl p-6 space-y-4"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#0077B5]/20 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-[#0077B5]" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-foreground">
+                Etapa 1 - Diagnóstico LinkedIn
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {diagnostic?.status === 'published'
+                  ? '✓ Publicado - Mentorado pode visualizar'
+                  : diagnostic
+                    ? '● Rascunho - Salvo mas não publicado'
+                    : '○ Pendente - Nenhum arquivo enviado'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-display font-semibold text-foreground">
-              Etapa 1: Diagnóstico LinkedIn
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              {diagnostic?.status === 'published' ? (
-                <span className="text-primary flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> Publicado
-                </span>
-              ) : diagnostic ? (
-                <span className="text-amber-500">Rascunho</span>
-              ) : (
-                <span>Não iniciado</span>
-              )}
-            </p>
-          </div>
+
+          {diagnostic?.status === 'published' && (
+            <CheckCircle className="w-6 h-6 text-primary" />
+          )}
         </div>
 
         <div className="space-y-4">
@@ -255,30 +374,48 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
           </div>
 
           <div className="space-y-2">
-            <Label>Notas / Observações</Label>
+            <Label>Observações (opcional)</Label>
             <Textarea
               value={diagnosticNotes}
               onChange={(e) => setDiagnosticNotes(e.target.value)}
-              placeholder="Adicione notas sobre o diagnóstico..."
-              className="bg-secondary/30 min-h-[100px]"
+              placeholder="Notas ou instruções para o mentorado..."
+              className="bg-secondary/30 min-h-[80px]"
             />
           </div>
 
-          {diagnostic?.pdf_url && (
-            <div className="p-3 bg-secondary/30 rounded-lg flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">PDF anexado</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(diagnostic.pdf_url!, '_blank')}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Visualizar
-              </Button>
-            </div>
-          )}
+          {/* File upload */}
+          <div className="space-y-2">
+            <Label>PDF do Diagnóstico</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex-1">
+                <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {uploadingDiagnostic ? 'Enviando...' : 'Clique para enviar PDF'}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleDiagnosticFileUpload}
+                  disabled={uploadingDiagnostic}
+                />
+              </label>
 
-          <div className="flex gap-2">
+              {diagnostic?.pdf_url && (
+                <Button variant="outline" asChild>
+                  <a href={diagnostic.pdf_url} target="_blank" rel="noopener noreferrer">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver PDF
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => handleSaveDiagnostic(false)}
@@ -288,44 +425,46 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
               Salvar Rascunho
             </Button>
             <Button
-              variant="glow"
               onClick={() => handleSaveDiagnostic(true)}
-              disabled={savingDiagnostic}
+              disabled={savingDiagnostic || !diagnostic?.pdf_url}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
-              Publicar
+              Publicar para Mentorado
             </Button>
           </div>
         </div>
       </motion.div>
 
-      {/* Opportunity Funnel Section */}
+      {/* Opportunity Funnel - Stage 3 */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-xl p-6 space-y-4"
+        className="glass-card rounded-xl p-6 space-y-4"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-            <Target className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+              <Target className="w-5 h-5 text-accent" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-foreground">
+                Etapa 3 - Funil de Oportunidades
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {funnel?.status === 'published'
+                  ? '✓ Publicado - Mentorado pode visualizar'
+                  : funnel
+                    ? '● Rascunho - Salvo mas não publicado'
+                    : '○ Pendente - Nenhum conteúdo criado'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-display font-semibold text-foreground">
-              Etapa 3: Funil de Oportunidades
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              {funnel?.status === 'published' ? (
-                <span className="text-primary flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> Publicado
-                </span>
-              ) : funnel ? (
-                <span className="text-amber-500">Rascunho</span>
-              ) : (
-                <span>Não iniciado</span>
-              )}
-            </p>
-          </div>
+
+          {funnel?.status === 'published' && (
+            <CheckCircle className="w-6 h-6 text-primary" />
+          )}
         </div>
 
         <div className="space-y-4">
@@ -338,41 +477,62 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
             />
           </div>
 
+          {/* PDF upload for funnel */}
           <div className="space-y-2">
-            <Label>Conteúdo do Funil</Label>
+            <Label>PDF do Funil</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex-1">
+                <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {uploadingFunnel ? 'Enviando...' : 'Clique para enviar PDF'}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleFunnelFileUpload}
+                  disabled={uploadingFunnel}
+                />
+              </label>
+
+              {funnel?.pdf_url && (
+                <Button variant="outline" asChild>
+                  <a href={funnel.pdf_url} target="_blank" rel="noopener noreferrer">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver PDF
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Conteúdo do Funil (opcional)</Label>
             <Textarea
               value={funnelContent}
               onChange={(e) => setFunnelContent(e.target.value)}
-              placeholder="Adicione o conteúdo do funil..."
-              className="bg-secondary/30 min-h-[150px]"
+              placeholder="Descreva o funil de oportunidades do mentorado..."
+              className="bg-secondary/30 min-h-[120px] font-mono text-sm"
             />
+            <p className="text-xs text-muted-foreground">
+              Você pode usar texto simples ou JSON estruturado. O PDF é o conteúdo principal.
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Notas / Observações</Label>
+            <Label>Observações (opcional)</Label>
             <Textarea
               value={funnelNotes}
               onChange={(e) => setFunnelNotes(e.target.value)}
-              placeholder="Adicione notas sobre o funil..."
-              className="bg-secondary/30 min-h-[100px]"
+              placeholder="Notas ou instruções para o mentorado..."
+              className="bg-secondary/30 min-h-[80px]"
             />
           </div>
 
-          {funnel?.pdf_url && (
-            <div className="p-3 bg-secondary/30 rounded-lg flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">PDF anexado</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(funnel.pdf_url!, '_blank')}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Visualizar
-              </Button>
-            </div>
-          )}
-
-          <div className="flex gap-2">
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => handleSaveFunnel(false)}
@@ -382,12 +542,12 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
               Salvar Rascunho
             </Button>
             <Button
-              variant="glow"
               onClick={() => handleSaveFunnel(true)}
-              disabled={savingFunnel}
+              disabled={savingFunnel || !funnel?.pdf_url}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
-              Publicar
+              Publicar para Mentorado
             </Button>
           </div>
         </div>
