@@ -182,60 +182,57 @@ const Auth = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-            <div className={`space-y-4 flex-1 ${!isLogin ? 'grid grid-cols-2 gap-4' : ''}`}>
+            <div className="space-y-4 flex-1">
               <AnimatePresence mode="wait">
                 {!isLogin && (
-                  <>
-                    <motion.div
-                      key="name-field"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-1.5 overflow-hidden"
-                    >
-                      <Label htmlFor="name" className="text-foreground/70 flex items-center gap-2 text-xs">
-                        <User className="w-3.5 h-3.5 text-primary" />
-                        Nome completo
-                      </Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Seu nome"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required={!isLogin}
-                        className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
-                      />
-                    </motion.div>
+                  <motion.div
+                    key="signup-fields"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4 overflow-hidden"
+                  >
+                    {/* Name and Phone in a row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="name" className="text-foreground/70 flex items-center gap-2 text-xs">
+                          <User className="w-3.5 h-3.5 text-primary" />
+                          Nome completo
+                        </Label>
+                        <Input
+                          id="name"
+                          type="text"
+                          placeholder="Seu nome"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          required={!isLogin}
+                          className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                        />
+                      </div>
 
-                    <motion.div
-                      key="phone-field"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-1.5 overflow-hidden"
-                    >
-                      <Label htmlFor="phone" className="text-foreground/70 flex items-center gap-2 text-xs">
-                        <Phone className="w-3.5 h-3.5 text-primary" />
-                        Telefone
-                      </Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="(11) 99999-9999"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required={!isLogin}
-                        className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
-                      />
-                    </motion.div>
-                  </>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="phone" className="text-foreground/70 flex items-center gap-2 text-xs">
+                          <Phone className="w-3.5 h-3.5 text-primary" />
+                          Telefone
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="(11) 99999-9999"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          required={!isLogin}
+                          className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
 
-              <motion.div variants={itemVariants} className={`space-y-1.5 ${!isLogin ? 'col-span-2' : ''}`}>
+              {/* Email - always full width */}
+              <motion.div variants={itemVariants} className="space-y-1.5">
                 <Label htmlFor="email" className="text-foreground/70 flex items-center gap-2 text-xs">
                   <Mail className="w-3.5 h-3.5 text-primary" />
                   Email
@@ -251,32 +248,53 @@ const Auth = () => {
                 />
               </motion.div>
 
-              <motion.div variants={itemVariants} className="space-y-1.5">
-                <Label htmlFor="password" className="text-foreground/70 flex items-center gap-2 text-xs">
-                  <Lock className="w-3.5 h-3.5 text-primary" />
-                  Senha
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
-                />
-              </motion.div>
+              {/* Password and requirements in a row for signup */}
+              {!isLogin ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.div variants={itemVariants} className="space-y-1.5">
+                    <Label htmlFor="password" className="text-foreground/70 flex items-center gap-2 text-xs">
+                      <Lock className="w-3.5 h-3.5 text-primary" />
+                      Senha
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                    />
+                  </motion.div>
 
-              {/* Password requirements - Fixed height container, always visible in signup */}
-              <div className={`h-[72px] transition-opacity duration-200 ${!isLogin ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 p-3 bg-secondary/20 rounded-lg border border-border/20">
-                  <PasswordRequirement met={passwordRequirements.minLength} text="8+ caracteres" />
-                  <PasswordRequirement met={passwordRequirements.hasUppercase} text="Maiúscula" />
-                  <PasswordRequirement met={passwordRequirements.hasLowercase} text="Minúscula" />
-                  <PasswordRequirement met={passwordRequirements.hasNumber} text="Número" />
-                  <PasswordRequirement met={passwordRequirements.hasSpecial} text="Especial (!@#...)" />
+                  {/* Password requirements */}
+                  <div className="flex items-end">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 p-3 bg-secondary/20 rounded-lg border border-border/20 w-full">
+                      <PasswordRequirement met={passwordRequirements.minLength} text="8+ caracteres" />
+                      <PasswordRequirement met={passwordRequirements.hasUppercase} text="Maiúscula" />
+                      <PasswordRequirement met={passwordRequirements.hasLowercase} text="Minúscula" />
+                      <PasswordRequirement met={passwordRequirements.hasNumber} text="Número" />
+                      <PasswordRequirement met={passwordRequirements.hasSpecial} text="Especial (!@#...)" />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <motion.div variants={itemVariants} className="space-y-1.5">
+                  <Label htmlFor="password" className="text-foreground/70 flex items-center gap-2 text-xs">
+                    <Lock className="w-3.5 h-3.5 text-primary" />
+                    Senha
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                  />
+                </motion.div>
+              )}
             </div>
 
             {/* Submit button */}
