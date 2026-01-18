@@ -100,29 +100,19 @@ export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: C
   const formatExtractedCV = (data: any): string => {
     let text = "";
     
-    // Safely handle experiencias - ensure it's an array
-    const experiencias = Array.isArray(data.experiencias) ? data.experiencias : [];
-    if (experiencias.length > 0) {
-      text += "EXPERIÊNCIAS PROFISSIONAIS:\n";
-      experiencias.forEach((exp: any) => {
-        text += `\n${exp.cargo || ''} - ${exp.empresa || ''} (${exp.periodo || ''})\n`;
-        const bullets = Array.isArray(exp.bullets) ? exp.bullets : [];
-        bullets.forEach((bullet: string) => {
-          text += `• ${bullet}\n`;
-        });
-      });
+    // A edge function retorna strings, não arrays
+    const experiencias = typeof data.experiencias === 'string' ? data.experiencias.trim() : '';
+    const educacao = typeof data.educacao === 'string' ? data.educacao.trim() : '';
+    
+    if (experiencias) {
+      text += "EXPERIÊNCIAS PROFISSIONAIS:\n" + experiencias;
     }
 
-    // Safely handle educacao - ensure it's an array
-    const educacao = Array.isArray(data.educacao) ? data.educacao : [];
-    if (educacao.length > 0) {
-      text += "\n\nEDUCAÇÃO:\n";
-      educacao.forEach((edu: any) => {
-        text += `• ${edu.curso || ''} - ${edu.instituicao || ''}\n`;
-      });
+    if (educacao) {
+      text += "\n\nEDUCAÇÃO:\n" + educacao;
     }
 
-    return text.trim() || "Dados do CV extraídos com sucesso.";
+    return text.trim() || "Dados do CV extraídos.";
   };
 
   const handleSubmit = () => {
