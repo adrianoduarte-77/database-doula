@@ -11,7 +11,7 @@ import { ATSCVPreview } from "@/components/ATSCVPreview";
 import { CoverLetterForm } from "@/components/CoverLetterForm";
 import { CoverLetterPreview } from "@/components/CoverLetterPreview";
 import { SaveCVModal } from "@/components/SaveCVModal";
-import { Zap, FolderOpen, LogIn, LogOut, User, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Zap, FolderOpen, LogIn, LogOut, User, ArrowLeft, CheckCircle2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,8 @@ const CVPage = () => {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showCoverLetterForm, setShowCoverLetterForm] = useState(false);
   const [savedCVs, setSavedCVs] = useState<any[]>([]);
+  const [savedCoverLetters, setSavedCoverLetters] = useState<any[]>([]);
+  const [showSaveCoverLetterModal, setShowSaveCoverLetterModal] = useState(false);
   const [stage2Completed, setStage2Completed] = useState(false);
   const [completingStage, setCompletingStage] = useState(false);
   const { toast } = useToast();
@@ -52,10 +54,15 @@ const CVPage = () => {
       setCvType("ats");
       setViewState("preview");
       window.history.replaceState({}, document.title);
+    } else if (location.state?.coverLetterData) {
+      setCoverLetterData(location.state.coverLetterData);
+      setCvType("cover-letter");
+      setViewState("preview");
+      window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
-  // Fetch saved CVs and stage2 completion status
+  // Fetch saved CVs, cover letters and stage2 completion status
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -68,6 +75,16 @@ const CVPage = () => {
 
       if (cvsData) {
         setSavedCVs(cvsData);
+      }
+
+      // Fetch saved cover letters
+      const { data: coverLettersData } = await supabase
+        .from('saved_cover_letters')
+        .select('id, name, cover_letter_data')
+        .eq('user_id', user.id);
+
+      if (coverLettersData) {
+        setSavedCoverLetters(coverLettersData);
       }
 
       // Fetch stage2 completion status
@@ -98,7 +115,10 @@ const CVPage = () => {
     return data?.nacionalidade !== undefined || data?.idiomas !== undefined;
   });
 
-  const hasAllDocuments = hasPersonalizedCV && hasATSCV;
+  // Cover Letter check
+  const hasCoverLetter = savedCoverLetters.length > 0;
+
+  const hasAllDocuments = hasPersonalizedCV && hasATSCV && hasCoverLetter;
   const canCompleteStage = hasAllDocuments && !stage2Completed;
 
   const handleCompleteStage2 = async () => {
@@ -307,6 +327,43 @@ const CVPage = () => {
     setShowSaveModal(true);
   };
 
+  const handleSaveCoverLetter = async (name: string) => {
+    if (!user) { navigate('/auth'); return; }
+    if (!coverLetterData) return;
+
+    try {
+      const { error } = await supabase.from('saved_cover_letters').insert({ 
+        user_id: user.id, 
+        name, 
+        cover_letter_data: coverLetterData as any 
+      });
+      if (error) throw error;
+      
+      // Refresh saved cover letters
+      const { data: coverLettersData } = await supabase
+        .from('saved_cover_letters')
+        .select('id, name, cover_letter_data')
+        .eq('user_id', user.id);
+      if (coverLettersData) {
+        setSavedCoverLetters(coverLettersData);
+      }
+      
+      toast({ title: "Carta salva! 💾", description: `"${name}" foi salva com sucesso.` });
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      throw error;
+    }
+  };
+
+  const handleOpenSaveCoverLetterModal = () => {
+    if (!user) {
+      toast({ title: "Faça login para salvar 🔐", description: "Você precisa de uma conta para salvar suas cartas." });
+      window.location.href = '/auth';
+      return;
+    }
+    setShowSaveCoverLetterModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <nav className="flex items-center justify-between py-4 px-4 md:px-6 print:hidden animate-fade-in">
@@ -316,10 +373,16 @@ const CVPage = () => {
           </Button>
           <img src={logoAd} alt="AD Logo" className="h-14 w-auto" />
           {user && (
-            <Button variant="outline" size="sm" onClick={() => navigate('/meus-cvs')} className="gap-2">
-              <FolderOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Meus CVs</span>
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate('/meus-cvs')} className="gap-2">
+                <FolderOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Meus CVs</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/minhas-cartas')} className="gap-2">
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline">Minhas Cartas</span>
+              </Button>
+            </>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -389,7 +452,7 @@ const CVPage = () => {
                               ? 'Você já pode acessar a Etapa 3 - Funil de Oportunidades'
                               : hasAllDocuments
                                 ? 'Você criou todos os documentos! Clique para concluir.'
-                                : `Crie seu ${!hasPersonalizedCV ? 'CV Personalizado' : ''} ${!hasPersonalizedCV && !hasATSCV ? 'e ' : ''} ${!hasATSCV ? 'CV ATS' : ''} para concluir.`
+                                : `Crie: ${!hasPersonalizedCV ? 'CV Personalizado' : ''}${!hasPersonalizedCV && (!hasATSCV || !hasCoverLetter) ? ', ' : ''}${!hasATSCV ? 'CV ATS' : ''}${!hasATSCV && !hasCoverLetter ? ', ' : ''}${!hasCoverLetter ? 'Carta de Apresentação' : ''}`
                             }
                           </p>
                         </div>
@@ -427,6 +490,9 @@ const CVPage = () => {
                           <span className={`text-xs px-2 py-1 rounded-full ${hasATSCV ? 'bg-green-500/20 text-green-500' : 'bg-muted/50 text-muted-foreground'}`}>
                             {hasATSCV ? '✓' : '○'} CV ATS
                           </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${hasCoverLetter ? 'bg-green-500/20 text-green-500' : 'bg-muted/50 text-muted-foreground'}`}>
+                            {hasCoverLetter ? '✓' : '○'} Carta de Apresentação
+                          </span>
                         </div>
                       </div>
                     )}
@@ -438,12 +504,19 @@ const CVPage = () => {
             {viewState === "form" && cvType === "ats" && (<motion.div key="ats-form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="bg-gradient-card rounded-2xl p-6 md:p-8 border border-border/50 shadow-card"><ATSCVForm onGenerate={handleGenerateATS} onBack={handleBackToSelector} /></motion.div>)}
             {viewState === "preview" && cvType === "personalized" && cvData && (<motion.div key="personalized-preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><CVPreview data={cvData} onReset={handleReset} onUpdate={handleUpdateCV} onSave={handleOpenSaveModal} /></motion.div>)}
             {viewState === "preview" && cvType === "ats" && atsCvData && (<motion.div key="ats-preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><ATSCVPreview data={atsCvData} onReset={handleReset} onSave={handleOpenSaveModalATS} /></motion.div>)}
-            {viewState === "preview" && cvType === "cover-letter" && coverLetterData && (<motion.div key="cover-letter-preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><CoverLetterPreview data={coverLetterData} onBack={handleBackFromCoverLetter} /></motion.div>)}
+            {viewState === "preview" && cvType === "cover-letter" && coverLetterData && (<motion.div key="cover-letter-preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}><CoverLetterPreview data={coverLetterData} onBack={handleBackFromCoverLetter} onSave={handleOpenSaveCoverLetterModal} /></motion.div>)}
           </AnimatePresence>
         </main>
       </div>
 
       <SaveCVModal open={showSaveModal} onOpenChange={setShowSaveModal} onSave={handleSaveCV} />
+      <SaveCVModal 
+        open={showSaveCoverLetterModal} 
+        onOpenChange={setShowSaveCoverLetterModal} 
+        onSave={handleSaveCoverLetter}
+        title="Salvar Carta de Apresentação"
+        placeholder="Ex: Carta para Vaga de Analista"
+      />
       <CoverLetterForm 
         open={showCoverLetterForm} 
         onOpenChange={(open) => {

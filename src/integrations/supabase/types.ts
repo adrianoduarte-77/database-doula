@@ -263,6 +263,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cover_letters: {
+        Row: {
+          cover_letter_data: Json
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_letter_data: Json
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_letter_data?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_cvs: {
         Row: {
           created_at: string

@@ -17,13 +17,17 @@ interface SaveCVModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (name: string) => Promise<void>;
   defaultName?: string;
+  title?: string;
+  placeholder?: string;
 }
 
 export const SaveCVModal = ({
   open,
   onOpenChange,
   onSave,
-  defaultName = ''
+  defaultName = '',
+  title = 'Salvar Currículo',
+  placeholder = 'Ex: "Diretor de Marketing - Google"'
 }: SaveCVModalProps) => {
   const [name, setName] = useState(defaultName);
   const [loading, setLoading] = useState(false);
@@ -48,20 +52,20 @@ export const SaveCVModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Sparkles className="w-5 h-5 text-primary" />
-            Salvar Currículo
+            {title}
           </DialogTitle>
           <DialogDescription>
-            Dê um nome para identificar esse currículo depois!
+            Dê um nome para identificar depois!
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="cv-name">Nome do Currículo</Label>
+              <Label htmlFor="cv-name">Nome</Label>
               <Input
                 id="cv-name"
-                placeholder='Ex: "Diretor de Marketing - Google"'
+                placeholder={placeholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-secondary/50"
