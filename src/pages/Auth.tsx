@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Check, X, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoAD from "@/assets/logo-ad.png";
 
@@ -26,6 +26,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
@@ -90,6 +91,7 @@ const Auth = () => {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: fullName,
+              phone: phone,
             },
           },
         });
@@ -147,7 +149,7 @@ const Auth = () => {
 
       {/* Main content */}
       <motion.div
-        className="relative z-10 w-full max-w-sm"
+        className={`relative z-10 w-full transition-all duration-300 ${isLogin ? 'max-w-sm' : 'max-w-md'}`}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -161,10 +163,10 @@ const Auth = () => {
           />
         </motion.div>
 
-        {/* Card - Fixed dimensions */}
+        {/* Card - Wider for signup */}
         <motion.div
           variants={itemVariants}
-          className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 min-h-[480px] flex flex-col"
+          className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 flex flex-col"
         >
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-6">
@@ -180,35 +182,60 @@ const Auth = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-            <div className="space-y-4 flex-1">
+            <div className={`space-y-4 flex-1 ${!isLogin ? 'grid grid-cols-2 gap-4' : ''}`}>
               <AnimatePresence mode="wait">
                 {!isLogin && (
-                  <motion.div
-                    key="name-field"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-1.5 overflow-hidden"
-                  >
-                    <Label htmlFor="name" className="text-foreground/70 flex items-center gap-2 text-xs">
-                      <User className="w-3.5 h-3.5 text-primary" />
-                      Nome completo
-                    </Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Seu nome"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required={!isLogin}
-                      className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
-                    />
-                  </motion.div>
+                  <>
+                    <motion.div
+                      key="name-field"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-1.5 overflow-hidden"
+                    >
+                      <Label htmlFor="name" className="text-foreground/70 flex items-center gap-2 text-xs">
+                        <User className="w-3.5 h-3.5 text-primary" />
+                        Nome completo
+                      </Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Seu nome"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required={!isLogin}
+                        className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      key="phone-field"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-1.5 overflow-hidden"
+                    >
+                      <Label htmlFor="phone" className="text-foreground/70 flex items-center gap-2 text-xs">
+                        <Phone className="w-3.5 h-3.5 text-primary" />
+                        Telefone
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required={!isLogin}
+                        className="h-11 bg-secondary/30 border-border/40 focus:border-primary/50 rounded-xl text-sm"
+                      />
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
 
-              <motion.div variants={itemVariants} className="space-y-1.5">
+              <motion.div variants={itemVariants} className={`space-y-1.5 ${!isLogin ? 'col-span-2' : ''}`}>
                 <Label htmlFor="email" className="text-foreground/70 flex items-center gap-2 text-xs">
                   <Mail className="w-3.5 h-3.5 text-primary" />
                   Email
