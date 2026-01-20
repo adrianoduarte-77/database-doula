@@ -37,7 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { InterviewScriptBuilder, KeywordScript } from "./InterviewScriptBuilder";
+import { AIGeneratedScripts, KeywordScript } from "./AIGeneratedScripts";
 import { SupportLink } from "./SupportLink";
 
 interface Stage4GuideProps {
@@ -59,7 +59,7 @@ const STEPS = [
   { id: 3, title: "Seu Perfil", icon: User, description: "Sobre você no LinkedIn" },
   { id: 4, title: "Experiências", icon: Briefcase, description: "Suas experiências" },
   { id: 5, title: "Palavras-Chave", icon: Target, description: "Análise da IA" },
-  { id: 6, title: "Roteiro", icon: MessageSquare, description: "Monte seu roteiro" },
+  { id: 6, title: "Roteiro", icon: Sparkles, description: "IA cria seu roteiro" },
   { id: 7, title: "Resumo", icon: Check, description: "Seus roteiros prontos" },
 ];
 
@@ -601,17 +601,20 @@ análise de dados"
           >
             <div className="text-center space-y-2 mb-8">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                <MessageSquare className="w-8 h-8 text-primary" />
+                <Sparkles className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="font-display text-2xl font-bold">Monte Seu Roteiro de Entrevista</h2>
+              <h2 className="font-display text-2xl font-bold">Roteiros Gerados pela IA</h2>
               <p className="text-muted-foreground">
-                Distribua as palavras-chave nas suas experiências e construa sua narrativa
+                A IA vai criar roteiros personalizados baseados nas suas experiências reais
               </p>
             </div>
 
-            <InterviewScriptBuilder
+            <AIGeneratedScripts
               keywords={data.keywords}
+              experiences={data.experiences}
+              linkedinAbout={data.linkedinAbout}
               companyName={data.companyName}
+              jobDescription={data.jobDescription}
               onComplete={async (scripts) => {
                 if (user?.id) {
                   try {
