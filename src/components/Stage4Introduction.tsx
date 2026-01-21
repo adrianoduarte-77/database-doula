@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Target, 
   Sparkles, 
-  MessageSquare, 
   Brain, 
   Mic, 
   Rocket, 
   ChevronRight,
   Lightbulb,
   CheckCircle,
-  Zap
+  Zap,
+  ArrowRight
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ interface Stage4IntroductionProps {
 }
 
 const mentorMessages = [
-  { text: "Chegou a hora de arrasar nas entrevistas! 🎯", icon: Target },
+  { text: "Chegou a hora de arrasar nas entrevistas!", icon: Target },
   { text: "Vou te ensinar um segredo: recrutadores buscam palavras-chave específicas. E a gente vai mapear todas elas.", icon: Brain },
   { text: "Depois, a IA vai criar roteiros personalizados conectando essas palavras com SUAS experiências reais.", icon: Sparkles },
   { text: "A estrutura mágica é: O QUE fez + COMO fez + RESULTADO. Simples assim!", icon: Lightbulb },
@@ -60,22 +60,15 @@ export const Stage4Introduction = ({ onStart }: Stage4IntroductionProps) => {
   const [showFeatures, setShowFeatures] = useState(hasSeenIntroThisSession);
   const [messagesComplete, setMessagesComplete] = useState(hasSeenIntroThisSession);
 
-  useEffect(() => {
-    if (hasSeenIntroThisSession) return;
-    
-    if (currentMessageIndex < mentorMessages.length) {
-      const timer = setTimeout(() => {
-        if (currentMessageIndex === mentorMessages.length - 1) {
-          setMessagesComplete(true);
-          sessionStorage.setItem(STAGE4_INTRO_KEY, 'true');
-          setTimeout(() => setShowFeatures(true), 600);
-        } else {
-          setCurrentMessageIndex(prev => prev + 1);
-        }
-      }, 2200);
-      return () => clearTimeout(timer);
+  const handleNextMessage = () => {
+    if (currentMessageIndex < mentorMessages.length - 1) {
+      setCurrentMessageIndex(prev => prev + 1);
+    } else {
+      setMessagesComplete(true);
+      sessionStorage.setItem(STAGE4_INTRO_KEY, 'true');
+      setTimeout(() => setShowFeatures(true), 800);
     }
-  }, [currentMessageIndex, hasSeenIntroThisSession]);
+  };
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center py-8 px-4">
@@ -86,28 +79,30 @@ export const Stage4Introduction = ({ onStart }: Stage4IntroductionProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex flex-col items-center gap-6 max-w-2xl mx-auto text-center"
           >
             {/* Mentor Photo */}
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
               className="relative"
             >
               <MentorAvatar size="xxl" />
               <motion.div 
                 className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
               >
                 <Mic className="w-4 h-4 text-primary-foreground" />
               </motion.div>
             </motion.div>
 
             {/* Messages Container - Fixed height to prevent jumping */}
-            <div className="min-h-[180px] flex flex-col justify-center space-y-3">
-              <AnimatePresence mode="popLayout">
+            <div className="min-h-[200px] flex flex-col justify-center space-y-3 w-full">
+              <AnimatePresence mode="wait">
                 {mentorMessages.slice(0, currentMessageIndex + 1).map((message, index) => {
                   const IconComponent = message.icon;
                   const isLatest = index === currentMessageIndex;
@@ -115,24 +110,29 @@ export const Stage4Introduction = ({ onStart }: Stage4IntroductionProps) => {
                   return (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 20, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                      className={`flex items-start gap-3 p-4 rounded-xl transition-all ${
+                      exit={{ opacity: 0.5, scale: 0.98 }}
+                      transition={{ 
+                        duration: 0.7, 
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        delay: index === currentMessageIndex ? 0.1 : 0
+                      }}
+                      className={`flex items-start gap-3 p-4 rounded-xl transition-all duration-500 ${
                         isLatest 
                           ? "bg-primary/10 border border-primary/20" 
-                          : "bg-secondary/30"
+                          : "bg-secondary/20 opacity-60"
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isLatest ? "bg-primary/20" : "bg-muted"
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-500 ${
+                        isLatest ? "bg-primary/20" : "bg-muted/50"
                       }`}>
-                        <IconComponent className={`w-4 h-4 ${
-                          isLatest ? "text-primary" : "text-muted-foreground"
+                        <IconComponent className={`w-4 h-4 transition-colors duration-500 ${
+                          isLatest ? "text-primary" : "text-muted-foreground/70"
                         }`} />
                       </div>
-                      <p className={`text-left text-sm md:text-base leading-relaxed ${
-                        isLatest ? "text-foreground" : "text-muted-foreground"
+                      <p className={`text-left text-sm md:text-base leading-relaxed transition-colors duration-500 ${
+                        isLatest ? "text-foreground" : "text-muted-foreground/70"
                       }`}>
                         {message.text}
                       </p>
@@ -142,28 +142,30 @@ export const Stage4Introduction = ({ onStart }: Stage4IntroductionProps) => {
               </AnimatePresence>
             </div>
 
-            {/* Typing indicator */}
+            {/* Next Button - Minimalist */}
             {!messagesComplete && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center gap-3"
+                transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <span className="text-sm text-muted-foreground">digitando</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-primary"
-                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        delay: i * 0.15,
-                      }}
-                    />
-                  ))}
-                </div>
+                <Button
+                  variant="ghost"
+                  onClick={handleNextMessage}
+                  className="gap-2 text-muted-foreground hover:text-foreground transition-colors duration-300"
+                >
+                  {currentMessageIndex < mentorMessages.length - 1 ? (
+                    <>
+                      <span className="text-sm">Continuar</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm">Ver o que vamos fazer</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
               </motion.div>
             )}
           </motion.div>
@@ -174,7 +176,7 @@ export const Stage4Introduction = ({ onStart }: Stage4IntroductionProps) => {
             key="features"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="w-full max-w-4xl mx-auto"
           >
             {/* Header */}
