@@ -35,6 +35,8 @@ import { StageWarningModal } from "@/components/StageWarningModal";
 import WelcomeMentorModal from "@/components/WelcomeMentorModal";
 import { Stage3WelcomeModal } from "@/components/Stage3WelcomeModal";
 import LogoutModal from "@/components/LogoutModal";
+import GiftModal from "@/components/GiftModal";
+import LearningPathView from "@/components/LearningPathView";
 
 interface StageProgress {
   stage_number: number;
@@ -155,6 +157,11 @@ const Portal = () => {
   const [currentPhrase] = useState(() =>
     impactPhrases[Math.floor(Math.random() * impactPhrases.length)]
   );
+  
+  // Gift modal states
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showLearningPath, setShowLearningPath] = useState(false);
+  const [learningPath, setLearningPath] = useState<string | null>(null);
 
   useEffect(() => {
     const titleTimer = setTimeout(() => setShowTitle(true), 300);
@@ -173,13 +180,14 @@ const Portal = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, platform_activated, stage2_unlocked, stage2_completed')
+        .select('full_name, platform_activated, stage2_unlocked, stage2_completed, learning_path')
         .eq('user_id', user.id)
         .single();
 
       if (profile) {
         setStage2Unlocked(profile.stage2_unlocked ?? false);
         setStage2Completed(profile.stage2_completed ?? false);
+        setLearningPath(profile.learning_path || null);
       }
 
       if (profile?.full_name) {
@@ -237,6 +245,25 @@ const Portal = () => {
 
     fetchData();
   }, [user?.id, adminLoading, isAdmin, navigate]);
+
+  // Check if gift should be shown (when user already saw welcome modal or is returning user)
+  useEffect(() => {
+    if (!user?.id || !learningPath || !platformActivated) return;
+    
+    const welcomeSeenKey = `welcome_seen_${user.id}`;
+    const giftSeenKey = `gift_seen_${user.id}`;
+    const hasSeenWelcome = localStorage.getItem(welcomeSeenKey);
+    const hasSeenGift = localStorage.getItem(giftSeenKey);
+    
+    // If user already saw welcome modal before (returning user) and hasn't seen gift, show it
+    if (hasSeenWelcome && !hasSeenGift && !showWelcomeModal) {
+      const timer = setTimeout(() => {
+        setShowGiftModal(true);
+      }, 1500); // Give time for page to load
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id, learningPath, platformActivated, showWelcomeModal]);
 
   const hasPersonalizedCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
@@ -344,6 +371,29 @@ const Portal = () => {
 
   const handleWelcomeComplete = () => {
     setShowWelcomeModal(false);
+    
+    // Check if user has a learning path and hasn't seen the gift yet
+    const giftSeenKey = `gift_seen_${user?.id}`;
+    const hasSeenGift = localStorage.getItem(giftSeenKey);
+    
+    if (learningPath && !hasSeenGift) {
+      setTimeout(() => {
+        setShowGiftModal(true);
+      }, 500);
+    }
+  };
+
+  const handleOpenGift = () => {
+    setShowGiftModal(false);
+    
+    // Mark gift as seen
+    const giftSeenKey = `gift_seen_${user?.id}`;
+    localStorage.setItem(giftSeenKey, 'true');
+    
+    // Show the learning path
+    setTimeout(() => {
+      setShowLearningPath(true);
+    }, 300);
   };
 
   const handleLogout = () => {
@@ -813,6 +863,21 @@ const Portal = () => {
         open={showLogoutModal}
         onComplete={handleLogoutComplete}
       />
+
+      {/* Gift Modal */}
+      <GiftModal
+        open={showGiftModal}
+        onOpenGift={handleOpenGift}
+      />
+
+      {/* Learning Path View */}
+      {learningPath && (
+        <LearningPathView
+          open={showLearningPath}
+          onClose={() => setShowLearningPath(false)}
+          learningPath={learningPath}
+        />
+      )}
     </div>
   );
 };
