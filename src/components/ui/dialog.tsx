@@ -4,10 +4,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Dialog = ({ modal = true, ...props }: DialogPrimitive.DialogProps) => (
-  <DialogPrimitive.Root modal={modal} {...props} />
-);
-Dialog.displayName = "Dialog";
+const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
