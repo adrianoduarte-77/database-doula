@@ -16,15 +16,14 @@ export const useAdmin = () => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-
+        // IMPORTANT: always use the backend role-check function.
+        // Reading user_roles directly can fail under RLS and cause inconsistent admin detection.
+        const { data, error } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin',
+        });
         if (error) throw error;
-        setIsAdmin(!!data);
+        setIsAdmin(Boolean(data));
       } catch (error) {
         console.error('Error checking admin role:', error);
         setIsAdmin(false);
