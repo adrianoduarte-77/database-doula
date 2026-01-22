@@ -251,6 +251,9 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-form-type="other"
                   className="mobile-input md:h-11 md:min-h-0 md:text-sm md:rounded-xl"
                 />
               </motion.div>
@@ -268,6 +271,9 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-form-type="other"
                   className="mobile-input md:h-11 md:min-h-0 md:text-sm md:rounded-xl"
                 />
                 
