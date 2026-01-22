@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, Save, FileText, Target, CheckCircle, Eye, Unlock, Lock, Gift } from 'lucide-react';
+import { ArrowLeft, Upload, Save, FileText, Target, CheckCircle, Eye, Unlock, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MenteeDetailProps {
@@ -50,10 +50,6 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
   const [stage2Unlocked, setStage2Unlocked] = useState(false);
   const [togglingStage2, setTogglingStage2] = useState(false);
 
-  // Learning path state
-  const [learningPath, setLearningPath] = useState('');
-  const [savingLearningPath, setSavingLearningPath] = useState(false);
-
   // Form states
   const [diagnosticTitle, setDiagnosticTitle] = useState('Diagnóstico LinkedIn');
   const [diagnosticNotes, setDiagnosticNotes] = useState('');
@@ -80,7 +76,7 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('stage2_unlocked, learning_path')
+          .select('stage2_unlocked')
           .eq('user_id', menteeId)
           .maybeSingle(),
       ]);
@@ -104,39 +100,11 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
 
       if (profileResult.data) {
         setStage2Unlocked(profileResult.data.stage2_unlocked ?? false);
-        setLearningPath(profileResult.data.learning_path || '');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSaveLearningPath = async () => {
-    setSavingLearningPath(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ learning_path: learningPath || null })
-        .eq('user_id', menteeId);
-
-      if (error) throw error;
-
-      toast({
-        title: learningPath ? "Trilha salva!" : "Trilha removida!",
-        description: learningPath 
-          ? "A trilha de desenvolvimento foi salva para o mentorado."
-          : "A trilha foi removida do mentorado.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSavingLearningPath(false);
     }
   };
 
@@ -457,86 +425,6 @@ export const MenteeDetail = ({ menteeId, menteeName, onBack }: MenteeDetailProps
         </div>
       </motion.div>
 
-      {/* Learning Path - Bonus Gift */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        className="glass-card rounded-xl p-6 space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <Gift className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground">
-                Bônus - Trilha de Desenvolvimento
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {learningPath 
-                  ? '✓ Trilha configurada - Mentorado verá o presente'
-                  : '○ Sem trilha - Configure para liberar o presente'}
-              </p>
-            </div>
-          </div>
-
-          {learningPath && (
-            <CheckCircle className="w-6 h-6 text-primary" />
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Trilha Personalizada</Label>
-            <Textarea
-              value={learningPath}
-              onChange={(e) => setLearningPath(e.target.value)}
-              placeholder={`Cole aqui a trilha de desenvolvimento do mentorado...
-
-Exemplo:
-🔹 MÓDULO 1 – BASE TÉCNICA
-Foco: Fundamentos da área
-
-Curso 1 – Plataforma
-https://exemplo.com/curso1
-
-🔹 MÓDULO 2 – GESTÃO
-Foco: Aplicar conhecimentos
-
-Curso 2 – Plataforma
-https://exemplo.com/curso2`}
-              className="bg-secondary/30 min-h-[200px] font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              Cole a trilha completa com módulos, cursos e links. O mentorado verá um modal de presente ao acessar o portal.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={handleSaveLearningPath}
-              disabled={savingLearningPath}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {savingLearningPath ? 'Salvando...' : 'Salvar Trilha'}
-            </Button>
-            {learningPath && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setLearningPath('');
-                  handleSaveLearningPath();
-                }}
-                className="text-destructive hover:text-destructive"
-              >
-                Remover Trilha
-              </Button>
-            )}
-          </div>
-        </div>
-      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}

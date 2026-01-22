@@ -22,10 +22,9 @@ import {
   Instagram,
   Home,
   Menu,
-  X,
-  Gift
+  X
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,7 +35,6 @@ import { StageWarningModal } from "@/components/StageWarningModal";
 import WelcomeMentorModal from "@/components/WelcomeMentorModal";
 import { Stage3WelcomeModal } from "@/components/Stage3WelcomeModal";
 import LogoutModal from "@/components/LogoutModal";
-import GiftModal from "@/components/GiftModal";
 
 interface StageProgress {
   stage_number: number;
@@ -157,11 +155,6 @@ const Portal = () => {
   const [currentPhrase] = useState(() =>
     impactPhrases[Math.floor(Math.random() * impactPhrases.length)]
   );
-  
-  // Gift modal states
-  const [showGiftModal, setShowGiftModal] = useState(false);
-  const [learningPath, setLearningPath] = useState<string | null>(null);
-  const giftAutoShownRef = useRef(false);
 
   useEffect(() => {
     const titleTimer = setTimeout(() => setShowTitle(true), 300);
@@ -176,49 +169,29 @@ const Portal = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
-      
-      // CRITICAL: Wait for admin check to complete before proceeding
       if (adminLoading) return;
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, platform_activated, stage2_unlocked, stage2_completed, learning_path')
+        .select('full_name, platform_activated, stage2_unlocked, stage2_completed')
         .eq('user_id', user.id)
         .single();
 
       if (profile) {
         setStage2Unlocked(profile.stage2_unlocked ?? false);
         setStage2Completed(profile.stage2_completed ?? false);
-        setLearningPath(profile.learning_path || null);
       }
 
       if (profile?.full_name) {
         setUserName(profile.full_name.split(' ')[0]);
       }
 
-      // Admins bypass activation check entirely
-      if (isAdmin) {
-        setPlatformActivated(true);
-      } else {
-        const activated = profile?.platform_activated ?? false;
-        setPlatformActivated(activated);
+      const activated = isAdmin ? true : (profile?.platform_activated ?? false);
+      setPlatformActivated(activated);
 
-        if (!activated) {
-          // Use SPA navigation to avoid full remount loops.
-          navigate('/ativar', { replace: true });
-          return;
-        }
-      }
-
-      // Auto-trigger the gift modal once we know the user is activated and we already have
-      // the learning path from the profile. This avoids relying on sequencing flags across routes.
-      if (!giftAutoShownRef.current && profile?.learning_path) {
-        const giftSeenKey = `gift_seen_${user.id}`;
-        const hasSeenGift = localStorage.getItem(giftSeenKey);
-        if (!hasSeenGift) {
-          giftAutoShownRef.current = true;
-          setTimeout(() => setShowGiftModal(true), 1200);
-        }
+      if (!activated) {
+        window.location.href = '/ativar';
+        return;
       }
 
       const { data: progressData } = await supabase
@@ -264,28 +237,6 @@ const Portal = () => {
 
     fetchData();
   }, [user?.id, adminLoading, isAdmin, navigate]);
-
-  // Check if gift should be shown (when user already saw welcome modal or is returning user)
-  useEffect(() => {
-    if (!user?.id || !learningPath || !platformActivated) return;
-    
-    const welcomeSeenKey = `welcome_seen_${user.id}`;
-    const giftSeenKey = `gift_seen_${user.id}`;
-    const hasSeenWelcome = localStorage.getItem(welcomeSeenKey);
-    const hasSeenGift = localStorage.getItem(giftSeenKey);
-    
-    // If user has a learning path and hasn't seen the gift, show it.
-    // We don't hard-depend on the welcome flag because welcome can be shown in another route
-    // (activation) or may not have been persisted yet.
-    if (!giftAutoShownRef.current && learningPath && !hasSeenGift && !showWelcomeModal) {
-      giftAutoShownRef.current = true;
-      const timer = setTimeout(() => {
-        setShowGiftModal(true);
-      }, 1500); // Give time for page to load
-      
-      return () => clearTimeout(timer);
-    }
-  }, [user?.id, learningPath, platformActivated, showWelcomeModal]);
 
   const hasPersonalizedCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
@@ -393,24 +344,6 @@ const Portal = () => {
 
   const handleWelcomeComplete = () => {
     setShowWelcomeModal(false);
-
-    // Persist welcome as seen (used for sequencing on returning sessions)
-    const welcomeSeenKey = `welcome_seen_${user?.id}`;
-    if (user?.id) localStorage.setItem(welcomeSeenKey, 'true');
-    
-    // Check if user has a learning path and hasn't seen the gift yet
-    const giftSeenKey = `gift_seen_${user?.id}`;
-    const hasSeenGift = localStorage.getItem(giftSeenKey);
-    
-    if (learningPath && !hasSeenGift) {
-      setTimeout(() => {
-        setShowGiftModal(true);
-      }, 500);
-    }
-  };
-
-  const handleCloseGift = () => {
-    setShowGiftModal(false);
   };
 
   const handleLogout = () => {
@@ -424,7 +357,6 @@ const Portal = () => {
 
   const sidebarLinks = [
     { icon: Home, label: 'Início', onClick: () => {}, active: true },
-    ...(learningPath ? [{ icon: Gift, label: 'Minha Trilha', onClick: () => navigate('/minha-trilha'), highlight: true }] : []),
     { icon: HelpCircle, label: 'Suporte', onClick: () => { window.location.href = '/suporte'; } },
     { icon: Settings, label: 'Configurações', onClick: () => { window.location.href = '/configuracoes'; } },
     { divider: true },
@@ -454,7 +386,6 @@ const Portal = () => {
             }
             
             const Icon = link.icon;
-            const isHighlight = 'highlight' in link && link.highlight;
             return (
               <motion.button
                 key={index}
@@ -465,13 +396,11 @@ const Portal = () => {
                   w-full flex items-center gap-3 p-3 rounded-xl transition-all
                   ${link.active 
                     ? 'bg-primary/15 text-primary' 
-                    : isHighlight
-                      ? 'bg-accent/15 text-accent hover:bg-accent/20'
-                      : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${isHighlight ? 'text-accent' : ''}`} />
+                <Icon className="w-5 h-5 flex-shrink-0" />
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-sm font-medium">
                   {link.label}
                 </span>
@@ -566,7 +495,6 @@ const Portal = () => {
                   }
                   
                   const Icon = link.icon;
-                  const isHighlight = 'highlight' in link && link.highlight;
                   return (
                     <button
                       key={index}
@@ -578,13 +506,11 @@ const Portal = () => {
                         w-full flex items-center gap-3 p-3 rounded-xl transition-all
                         ${link.active 
                           ? 'bg-primary/15 text-primary' 
-                          : isHighlight
-                            ? 'bg-accent/15 text-accent hover:bg-accent/20'
-                            : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                          : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                         }
                       `}
                     >
-                      <Icon className={`w-5 h-5 ${isHighlight ? 'text-accent' : ''}`} />
+                      <Icon className="w-5 h-5" />
                       <span className="text-sm font-medium">{link.label}</span>
                       {link.external && <ChevronRight className="w-4 h-4 ml-auto opacity-50" />}
                     </button>
@@ -886,13 +812,6 @@ const Portal = () => {
       <LogoutModal
         open={showLogoutModal}
         onComplete={handleLogoutComplete}
-      />
-
-      {/* Gift Modal */}
-      <GiftModal
-        open={showGiftModal}
-        onClose={handleCloseGift}
-        userId={user?.id}
       />
     </div>
   );
