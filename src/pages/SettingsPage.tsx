@@ -49,7 +49,7 @@ type SettingsSection = "profile" | "security" | "notifications" | "appearance" |
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -73,6 +73,9 @@ const SettingsPage = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking user
+    if (authLoading) return;
+    
     if (!user) {
       navigate("/auth");
       return;
@@ -95,7 +98,21 @@ const SettingsPage = () => {
     };
 
     fetchProfile();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If no user after loading, don't render (redirect will happen)
+  if (!user) {
+    return null;
+  }
 
   const handleSaveProfile = async () => {
     if (!user) return;
