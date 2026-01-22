@@ -122,10 +122,10 @@ const stages = [
 ];
 
 const impactPhrases = [
-  "Conquiste a vaga dos seus sonhos.",
-  "Destaque-se no mercado.",
-  "Sua carreira, outro nível.",
-  "O perfil que impressiona.",
+  "Sua próxima grande oportunidade começa aqui.",
+  "Transforme seu perfil em um ímã de oportunidades.",
+  "Construa o caminho para a carreira dos seus sonhos.",
+  "O método que está revolucionando recolocações.",
 ];
 
 const Portal = () => {
