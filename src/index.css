@@ -122,12 +122,21 @@
 
   html {
     overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+    scrollbar-gutter: stable; /* Reserve space for scrollbar even when hidden */
   }
 
-  /* Prevent layout shift when Radix Dialog adds overflow:hidden to body */
-  body[data-scroll-locked] {
-    padding-right: 6px !important; /* Compensate for scrollbar width */
-    overflow-y: scroll !important; /* Keep scrollbar visible */
+  /* Prevent layout shift when Radix removes scroll - target the actual class used */
+  body[data-scroll-locked],
+  body.ReactModal__Body--open,
+  body[style*="overflow: hidden"],
+  body[style*="overflow:hidden"] {
+    padding-right: var(--scrollbar-width, 6px) !important;
+    overflow-y: scroll !important;
+  }
+
+  /* Calculate scrollbar width dynamically */
+  :root {
+    --scrollbar-width: 6px;
   }
 
   body {
@@ -135,6 +144,7 @@
     font-family: var(--font-body);
     background-color: hsl(0 0% 0%) !important;
     color: hsl(0 0% 95%) !important;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
