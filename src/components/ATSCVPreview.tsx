@@ -2,11 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Download,
-  Save,
-  Phone,
-  MapPin,
-  Mail,
-  Linkedin
+  Save
 } from "lucide-react";
 import { ATSCVData } from "@/types/ats-cv";
 import { motion } from "framer-motion";
@@ -53,42 +49,53 @@ export function ATSCVPreview({ data, onReset, onSave }: ATSCVPreviewProps) {
       >
         {/* Header */}
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-4">{data.nome}</h1>
-
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700">
-            {data.telefone && (
-              <div className="flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                <span>{data.telefone}</span>
-              </div>
-            )}
-            {data.localizacao && (
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>{data.localizacao}</span>
-              </div>
-            )}
-            {data.email && (
-              <div className="flex items-center gap-1">
-                <Mail className="w-4 h-4" />
-                <span>{data.email}</span>
-              </div>
-            )}
-            {data.linkedin && (
-              <div className="flex items-center gap-1">
-                <Linkedin className="w-4 h-4" />
-                <a href={data.linkedin} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                  {data.linkedin}
-                </a>
-              </div>
-            )}
+          {/* Contact info aligned right */}
+          <div className="flex justify-end mb-4">
+            <div className="text-right text-sm text-black space-y-0.5">
+              {data.telefone && (
+                <p>
+                  <span className="font-semibold">Telefone:</span>{" "}
+                  <a href={`tel:${data.telefone}`} className="text-blue-600 hover:underline">
+                    {data.telefone}
+                  </a>
+                </p>
+              )}
+              {data.localizacao && (
+                <p>
+                  <span className="font-semibold">Localização:</span>{" "}
+                  <span className="text-blue-600">{data.localizacao}</span>
+                </p>
+              )}
+              {data.email && (
+                <p>
+                  <span className="font-semibold">E-mail:</span>{" "}
+                  <a href={`mailto:${data.email}`} className="text-blue-600 hover:underline">
+                    {data.email}
+                  </a>
+                </p>
+              )}
+              {data.linkedin && (
+                <p>
+                  <span className="font-semibold">Linkedin:</span>
+                  <br />
+                  <a href={data.linkedin} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                    {data.linkedin}
+                  </a>
+                </p>
+              )}
+              {(data.nacionalidade || data.idade) && (
+                <p className="mt-2 uppercase font-semibold">
+                  {data.nacionalidade}{data.nacionalidade && data.idade ? ", " : ""}{data.idade ? `${data.idade} ANOS` : ""}.
+                </p>
+              )}
+            </div>
           </div>
 
-          {(data.nacionalidade || data.idade) && (
-            <p className="mt-2 text-sm text-gray-600 uppercase">
-              {[data.nacionalidade, data.idade].filter(Boolean).join(', ')}.
-            </p>
-          )}
+          {/* Black bar and name below */}
+          <div className="border-b-4 border-black mb-2" />
+          <h1 className="text-3xl font-light tracking-wide text-black uppercase">
+            {data.nome}
+          </h1>
         </header>
 
         {/* Experiências */}
