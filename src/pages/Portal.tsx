@@ -162,8 +162,9 @@ const Portal = () => {
   );
 
   useEffect(() => {
-    const titleTimer = setTimeout(() => setShowTitle(true), 300);
-    const contentTimer = setTimeout(() => setShowContent(true), 800);
+    // Sequência harmônica: sidebar/saudação → cards → progresso
+    const titleTimer = setTimeout(() => setShowTitle(true), 400);
+    const contentTimer = setTimeout(() => setShowContent(true), 900);
 
     return () => {
       clearTimeout(titleTimer);
@@ -412,7 +413,7 @@ const Portal = () => {
         className="hidden lg:flex flex-col w-20 hover:w-64 transition-all duration-300 group bg-card/50 backdrop-blur-xl border-r border-border/50 fixed left-0 top-0 bottom-0 z-50"
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
       >
         {/* Logo */}
         <div className="p-4 flex items-center justify-center border-b border-border/30">
@@ -661,7 +662,7 @@ const Portal = () => {
             className="hidden lg:block w-[45%] xl:w-[40%] relative"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
             <div className="sticky top-0 h-screen">
               <img
@@ -683,7 +684,7 @@ const Portal = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
                   className="mb-8"
                 >
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 mb-6">
@@ -696,7 +697,7 @@ const Portal = () => {
                       className="text-3xl lg:text-4xl xl:text-5xl font-display font-bold mb-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
+                      transition={{ delay: 0.4 }}
                     >
                       Olá, <span className="text-gradient">{userName}</span>
                     </motion.h1>
@@ -714,7 +715,7 @@ const Portal = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                 >
                   <h2 className="text-xl font-display font-bold text-foreground mb-6">
                     Suas Etapas
@@ -731,9 +732,9 @@ const Portal = () => {
                         <motion.button
                           key={stage.number}
                           onClick={() => handleStageClick(stage)}
-                          initial={{ opacity: 0, y: 20 }}
+                          initial={{ opacity: 0, y: 15 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: index * 0.05 }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
                           whileHover={!blocked ? { scale: 1.01 } : {}}
                           whileTap={!blocked ? { scale: 0.99 } : {}}
                           className={`
@@ -794,7 +795,7 @@ const Portal = () => {
                     className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border border-primary/20"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.5 }}
                   >
                     <p className="text-sm text-muted-foreground italic text-center">
                       "Cada etapa foi desenvolvida para te guiar passo a passo na sua recolocação profissional."
@@ -806,7 +807,7 @@ const Portal = () => {
                     className="mt-6 grid grid-cols-3 gap-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.6, duration: 0.4 }}
                   >
                     <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
                       <p className="text-2xl font-display font-bold text-primary">{stages.length}</p>
