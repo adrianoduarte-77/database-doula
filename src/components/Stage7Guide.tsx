@@ -71,29 +71,29 @@ const STEPS = [
   { id: 5, title: 'Publicar', icon: Copy },
 ];
 
-const CONTENT_TYPES: { type: ContentType; label: string; icon: string; description: string }[] = [
+const CONTENT_TYPES: { type: ContentType; label: string; Icon: React.ComponentType<{ className?: string }>; description: string }[] = [
   { 
     type: 'inspiracao', 
     label: 'Inspiração', 
-    icon: '✨', 
+    Icon: Sparkles, 
     description: 'Histórias que geram identificação e inspiram seu público' 
   },
   { 
     type: 'enquete', 
     label: 'Enquete', 
-    icon: '📊', 
+    Icon: BarChart3, 
     description: 'Perguntas que geram engajamento e abrem conversas' 
   },
   { 
     type: 'dicas_rapidas', 
     label: 'Dicas Rápidas', 
-    icon: '💡', 
+    Icon: Lightbulb, 
     description: 'Valor rápido com estrutura problema/solução' 
   },
   { 
     type: 'como_resolver', 
     label: 'Como Resolver', 
-    icon: '🎯', 
+    Icon: Target, 
     description: 'Posiciona você como especialista - o mais poderoso!' 
   },
 ];
@@ -433,13 +433,13 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
-                        <motion.span 
-                          className="text-3xl"
-                          animate={selectedType === content.type ? { scale: [1, 1.2, 1] } : {}}
+                        <motion.div 
+                          className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0"
+                          animate={selectedType === content.type ? { scale: [1, 1.15, 1] } : {}}
                           transition={{ duration: 0.3 }}
                         >
-                          {content.icon}
-                        </motion.span>
+                          <content.Icon className="w-5 h-5 text-primary" />
+                        </motion.div>
                         <div>
                           <h3 className="font-semibold text-lg mb-1">{content.label}</h3>
                           <p className="text-sm text-muted-foreground">{content.description}</p>
