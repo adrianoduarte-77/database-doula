@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logoAd from '@/assets/logo-ad.png';
 import { MentorAvatar } from '@/components/MentorAvatar';
 import { SupportLink } from '@/components/SupportLink';
+import { StageCompleteButton } from '@/components/StageCompleteButton';
 
 interface Diagnostic {
   id: string;
@@ -426,6 +427,16 @@ const Stage1Page = () => {
                         </a>
                       </Button>
                     </Card>
+                  </motion.div>
+
+                  {/* Complete Stage Button */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex justify-center pt-4"
+                  >
+                    <StageCompleteButton stageNumber={1} />
                   </motion.div>
                 </motion.div>
               )}

@@ -149,6 +149,7 @@ const Portal = () => {
   });
   const [stage2Unlocked, setStage2Unlocked] = useState<boolean>(false);
   const [stage2Completed, setStage2Completed] = useState<boolean>(false);
+  const [stage3Unlocked, setStage3Unlocked] = useState<boolean>(false);
   const [showStage3Modal, setShowStage3Modal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -173,13 +174,14 @@ const Portal = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, platform_activated, stage2_unlocked, stage2_completed')
+        .select('full_name, platform_activated, stage2_unlocked, stage2_completed, stage3_unlocked')
         .eq('user_id', user.id)
         .single();
 
       if (profile) {
         setStage2Unlocked(profile.stage2_unlocked ?? false);
         setStage2Completed(profile.stage2_completed ?? false);
+        setStage3Unlocked(profile.stage3_unlocked ?? false);
       }
 
       if (profile?.full_name) {
@@ -251,6 +253,10 @@ const Portal = () => {
   const hasBothCVTypes = hasPersonalizedCV && hasATSCV;
 
   const getStageStatus = (stageNumber: number) => {
+    // Check mentoring_progress for completed status first
+    const stageProgress = progress.find(p => p.stage_number === stageNumber);
+    if (stageProgress?.completed) return 'completed';
+
     if (stageNumber === 1) {
       return linkedinDiagnostic?.status === 'published' ? 'available' : 'pending';
     }
@@ -258,8 +264,6 @@ const Portal = () => {
       return opportunityFunnel?.status === 'published' ? 'available' : 'pending';
     }
 
-    const stageProgress = progress.find(p => p.stage_number === stageNumber);
-    if (stageProgress?.completed) return 'completed';
     if (stageProgress) return 'in_progress';
     return 'not_started';
   };
@@ -274,7 +278,7 @@ const Portal = () => {
     }
 
     if (stageNumber === 3) {
-      return false;
+      return !stage3Unlocked;
     }
 
     if (stageNumber === 4) {
@@ -316,9 +320,11 @@ const Portal = () => {
     }
 
     if (stage.number === 3) {
+      // Stage 3 is unlocked but funnel may not be ready yet
       if (opportunityFunnel?.status === 'published') {
         navigate(stage.path);
       } else {
+        // Show modal explaining funnel is being prepared
         setShowStage3Modal(true);
       }
       return;

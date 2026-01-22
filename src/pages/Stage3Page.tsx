@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logoAd from '@/assets/logo-ad.png';
 import mentorPhoto from '@/assets/mentor-photo.png';
 import { SupportLink } from '@/components/SupportLink';
+import { StageCompleteButton } from '@/components/StageCompleteButton';
 
 interface Funnel {
   id: string;
@@ -475,6 +476,16 @@ const Stage3Page = () => {
                         <ArrowRight className="w-4 h-4" />
                       </Button>
                     </Card>
+                  </motion.div>
+
+                  {/* Complete Stage Button */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="flex justify-center pt-4"
+                  >
+                    <StageCompleteButton stageNumber={3} />
                   </motion.div>
                 </motion.div>
               )}
