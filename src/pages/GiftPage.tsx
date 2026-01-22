@@ -336,7 +336,26 @@ const GiftPage = () => {
                   </div>
                 </div>
 
-                {/* Caixa de presente - segundo */}
+                {/* Texto - segundo (entre duarte e presente) */}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-xl md:text-2xl text-foreground mb-2"
+                >
+                  Eu tenho um <span className="text-primary font-semibold">presente</span> para você!
+                </motion.p>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-muted-foreground mb-8"
+                >
+                  Preparei algo especial pensando na sua carreira.
+                </motion.p>
+
+                {/* Caixa de presente - terceiro */}
                 <motion.div
                   animate={{ 
                     y: [0, -10, 0],
@@ -360,24 +379,6 @@ const GiftPage = () => {
                     <Sparkles className="w-8 h-8 text-accent" />
                   </motion.div>
                 </motion.div>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-xl md:text-2xl text-foreground mb-2"
-                >
-                  Eu tenho um <span className="text-primary font-semibold">presente</span> para você!
-                </motion.p>
-                
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-muted-foreground mb-8"
-                >
-                  Preparei algo especial pensando na sua carreira.
-                </motion.p>
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
