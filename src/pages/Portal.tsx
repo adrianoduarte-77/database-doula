@@ -132,7 +132,10 @@ const impactPhrases = [
 const Portal = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isAdmin, isAdminSticky, loading: adminLoading } = useAdmin();
+  
+  // Effective admin status: either current check or sticky (once admin, always admin in session)
+  const effectiveIsAdmin = isAdmin || isAdminSticky;
   const [progress, setProgress] = useState<StageProgress[]>([]);
   const [userName, setUserName] = useState<string | null>(null);
   const [showTitle, setShowTitle] = useState(false);
@@ -171,16 +174,29 @@ const Portal = () => {
       if (!user?.id) return;
       if (adminLoading) return;
 
-      // ADMIN = PORTAL DIRETO, sem nenhuma verificação de ativação
-      if (isAdmin) {
+      // ADMIN = PORTAL DIRETO, sem nenhuma verificação de ativação ou presente
+      if (effectiveIsAdmin) {
+        console.log('[Portal] Admin detected - bypassing all activation/gift checks');
         setPlatformActivated(true);
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, platform_activated, stage2_unlocked, stage2_completed, learning_path')
         .eq('user_id', user.id)
         .single();
+
+      // If profile fetch fails, don't redirect - just show loading or error
+      if (profileError) {
+        console.error('[Portal] Error fetching profile:', profileError);
+        // For admin, just continue - they don't need activation
+        if (effectiveIsAdmin) {
+          // Admin can continue even without profile
+        } else {
+          // Non-admin with profile error: don't redirect, show error state
+          return;
+        }
+      }
 
       if (profile) {
         setStage2Unlocked(profile.stage2_unlocked ?? false);
@@ -191,12 +207,13 @@ const Portal = () => {
         setUserName(profile.full_name.split(' ')[0]);
       }
 
-      // Apenas non-admin precisa verificar ativação
-      if (!isAdmin) {
+      // ADMIN NEVER gets redirected to /ativar or /presente
+      if (!effectiveIsAdmin) {
         const activated = profile?.platform_activated ?? false;
         setPlatformActivated(activated);
 
         if (!activated) {
+          console.log('[Portal] Non-admin not activated, redirecting to /ativar');
           window.location.href = '/ativar';
           return;
         }
@@ -206,6 +223,7 @@ const Portal = () => {
           const giftSeenKey = `gift_seen_${user.id}`;
           const hasSeenGift = localStorage.getItem(giftSeenKey);
           if (!hasSeenGift) {
+            console.log('[Portal] Non-admin has unseen gift, redirecting to /presente');
             navigate('/presente');
             return;
           }
@@ -254,7 +272,7 @@ const Portal = () => {
     };
 
     fetchData();
-  }, [user?.id, adminLoading, isAdmin, navigate]);
+  }, [user?.id, adminLoading, effectiveIsAdmin, navigate]);
 
   const hasPersonalizedCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
@@ -321,7 +339,8 @@ const Portal = () => {
       return;
     }
 
-    if (!platformActivated) {
+    // Admin always has platform activated
+    if (!effectiveIsAdmin && !platformActivated) {
       return;
     }
 
@@ -463,7 +482,7 @@ const Portal = () => {
         )}
 
         {/* Admin Button */}
-        {isAdmin && (
+        {effectiveIsAdmin && (
           <div className="p-4 pt-0">
             <Button
               variant="outline"
@@ -563,7 +582,7 @@ const Portal = () => {
                 </div>
               )}
 
-              {isAdmin && (
+              {effectiveIsAdmin && (
                 <div className="p-4 pt-0">
                   <Button
                     variant="default"

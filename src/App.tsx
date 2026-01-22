@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import AdminBypassGate from "@/components/AdminBypassGate";
 import Portal from "./pages/Portal";
 import CVPage from "./pages/CVPage";
 import Auth from "./pages/Auth";
@@ -36,13 +37,13 @@ const App = () => (
             <Route path="/" element={<Portal />} />
             <Route path="/cv" element={<CVPage />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/ativar" element={<ActivatePlatform />} />
+            <Route path="/ativar" element={<AdminBypassGate><ActivatePlatform /></AdminBypassGate>} />
             <Route path="/meus-cvs" element={<MeusCVs />} />
             <Route path="/minhas-cartas" element={<MinhasCartas />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/suporte" element={<SupportPage />} />
             <Route path="/configuracoes" element={<SettingsPage />} />
-            <Route path="/presente" element={<GiftPage />} />
+            <Route path="/presente" element={<AdminBypassGate><GiftPage /></AdminBypassGate>} />
             <Route path="/etapa/1" element={<Stage1Page />} />
             <Route path="/etapa/3" element={<Stage3Page />} />
             <Route path="/etapa/4" element={<Stage4Page />} />
