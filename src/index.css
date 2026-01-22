@@ -124,6 +124,12 @@
     overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
   }
 
+  /* Prevent layout shift when Radix Dialog adds overflow:hidden to body */
+  body[data-scroll-locked] {
+    padding-right: 6px !important; /* Compensate for scrollbar width */
+    overflow-y: scroll !important; /* Keep scrollbar visible */
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-family: var(--font-body);
