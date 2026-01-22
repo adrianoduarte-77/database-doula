@@ -71,11 +71,8 @@ serve(async (req) => {
       }
     }
 
-    // Update invite codes to remove the used_by reference
-    await supabaseAdmin
-      .from("invite_codes")
-      .update({ used_by: null, used: false, used_at: null })
-      .eq("used_by", userId);
+    // Note: Invite codes remain marked as used even after account deletion
+    // to ensure they can only be used once ever
 
     // Finally, delete the user from auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
