@@ -436,12 +436,12 @@ const Portal = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={`
-                  w-full flex items-center gap-3 p-3 rounded-xl transition-all
+                  w-full flex items-center gap-3 p-3 rounded-xl transition-all border
                   ${'highlight' in link && link.highlight
-                    ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-primary border border-primary/30'
+                    ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30'
                     : link.active 
-                      ? 'bg-primary/15 text-primary' 
-                      : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                      ? 'bg-primary/15 text-primary border-primary/30' 
+                      : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground border-transparent'
                   }
                 `}
               >
