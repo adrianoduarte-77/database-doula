@@ -35,6 +35,51 @@ const hashContent = (content: string): string => {
   return hash.toString(36);
 };
 
+// Extract platform/company name from course URL
+const getPlatformFromUrl = (url: string): { name: string; color: string } => {
+  const lowerUrl = url.toLowerCase();
+  
+  if (lowerUrl.includes('linkedin.com/learning')) {
+    return { name: 'LinkedIn Learning', color: 'from-[#0077B5] to-[#0077B5]/70' };
+  }
+  if (lowerUrl.includes('coursera.org')) {
+    return { name: 'Coursera', color: 'from-[#0056D2] to-[#0056D2]/70' };
+  }
+  if (lowerUrl.includes('udemy.com')) {
+    return { name: 'Udemy', color: 'from-[#A435F0] to-[#A435F0]/70' };
+  }
+  if (lowerUrl.includes('alura.com')) {
+    return { name: 'Alura', color: 'from-[#0B6CFF] to-[#0B6CFF]/70' };
+  }
+  if (lowerUrl.includes('rocketseat.com')) {
+    return { name: 'Rocketseat', color: 'from-[#8257E5] to-[#8257E5]/70' };
+  }
+  if (lowerUrl.includes('google.com') || lowerUrl.includes('grow.google')) {
+    return { name: 'Google', color: 'from-[#4285F4] to-[#34A853]' };
+  }
+  if (lowerUrl.includes('microsoft.com') || lowerUrl.includes('learn.microsoft')) {
+    return { name: 'Microsoft Learn', color: 'from-[#00A4EF] to-[#7FBA00]' };
+  }
+  if (lowerUrl.includes('edx.org')) {
+    return { name: 'edX', color: 'from-[#02262B] to-[#02262B]/70' };
+  }
+  if (lowerUrl.includes('youtube.com')) {
+    return { name: 'YouTube', color: 'from-[#FF0000] to-[#FF0000]/70' };
+  }
+  if (lowerUrl.includes('dio.me')) {
+    return { name: 'DIO', color: 'from-[#1A1A2E] to-[#1A1A2E]/70' };
+  }
+  if (lowerUrl.includes('sebrae.com')) {
+    return { name: 'Sebrae', color: 'from-[#004B87] to-[#004B87]/70' };
+  }
+  if (lowerUrl.includes('ev.org.br') || lowerUrl.includes('fgv.br')) {
+    return { name: 'FGV', color: 'from-[#003366] to-[#003366]/70' };
+  }
+  
+  // Default
+  return { name: 'Curso Online', color: 'from-primary to-accent' };
+};
+
 const GiftPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -498,26 +543,34 @@ const GiftPage = () => {
                         </div>
 
                         <div className="space-y-3 pl-0 md:pl-16">
-                          {module.courses.map((course, courseIndex) => (
-                            <motion.a
-                              key={courseIndex}
-                              href={course.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: moduleIndex * 0.1 + courseIndex * 0.05 }}
-                              className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border/50 hover:border-primary/30 transition-all group"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                                <BookOpen className="w-4 h-4 text-primary" />
-                              </div>
-                              <span className="flex-1 text-sm md:text-base text-foreground group-hover:text-primary transition-colors">
-                                {course.name}
-                              </span>
-                              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </motion.a>
-                          ))}
+                          {module.courses.map((course, courseIndex) => {
+                            const platform = getPlatformFromUrl(course.url);
+                            return (
+                              <motion.a
+                                key={courseIndex}
+                                href={course.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: moduleIndex * 0.1 + courseIndex * 0.05 }}
+                                className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border/50 hover:border-primary/30 transition-all group"
+                              >
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                  <BookOpen className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="block text-sm md:text-base text-foreground group-hover:text-primary transition-colors truncate">
+                                    {course.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {platform.name}
+                                  </span>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                              </motion.a>
+                            );
+                          })}
                         </div>
                       </motion.div>
                     ))}
