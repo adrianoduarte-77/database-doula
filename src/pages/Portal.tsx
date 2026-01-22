@@ -357,8 +357,8 @@ const Portal = () => {
 
   const sidebarLinks = [
     { icon: Home, label: 'Início', onClick: () => {}, active: true },
-    { icon: HelpCircle, label: 'Suporte', onClick: () => navigate('/suporte') },
-    { icon: Settings, label: 'Configurações', onClick: () => navigate('/configuracoes') },
+    { icon: HelpCircle, label: 'Suporte', onClick: () => { window.location.href = '/suporte'; } },
+    { icon: Settings, label: 'Configurações', onClick: () => { window.location.href = '/configuracoes'; } },
     { divider: true },
     { icon: Instagram, label: 'Instagram', onClick: () => window.open('https://www.instagram.com/oduarteeoficial/', '_blank'), external: true },
     { icon: Linkedin, label: 'LinkedIn', onClick: () => window.open('https://www.linkedin.com/in/oduarteoficial/', '_blank'), external: true },
@@ -433,7 +433,7 @@ const Portal = () => {
         ) : (
           <div className="p-4 border-t border-border/30">
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => { window.location.href = '/auth'; }}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all"
             >
               <LogIn className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -536,7 +536,7 @@ const Portal = () => {
               ) : (
                 <div className="p-4 border-t border-border/30">
                   <button 
-                    onClick={() => { navigate('/auth'); setSidebarOpen(false); }}
+                    onClick={() => { window.location.href = '/auth'; }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all"
                   >
                     <LogIn className="w-5 h-5 text-muted-foreground" />
@@ -575,7 +575,7 @@ const Portal = () => {
               <User className="w-5 h-5 text-primary" />
             </div>
           ) : (
-            <Button variant="ghost" size="icon" onClick={() => navigate('/auth')}>
+            <Button variant="ghost" size="icon" onClick={() => { window.location.href = '/auth'; }}>
               <LogIn className="w-5 h-5" />
             </Button>
           )}
