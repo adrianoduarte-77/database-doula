@@ -104,9 +104,13 @@ const GiftPage = () => {
   const fetchLearningPath = async () => {
     if (!user) return;
 
+    const navState = location.state as { direct?: boolean; fromActivation?: boolean } | null;
+    
     // When the user comes from the Portal sidebar, we want a direct reveal (no gift animation).
-    const directFromSidebar =
-      (location.state as { direct?: boolean } | null)?.direct === true;
+    const directFromSidebar = navState?.direct === true;
+    
+    // When user comes from activation flow, ALWAYS show animation
+    const fromActivation = navState?.fromActivation === true;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -119,6 +123,12 @@ const GiftPage = () => {
       
       const seenKey = `gift_seen_${user.id}`;
       const seen = localStorage.getItem(seenKey);
+
+      // If user came from activation (Começar Jornada), ALWAYS show intro animation
+      if (fromActivation) {
+        setStep('intro');
+        return;
+      }
 
       // If user came from sidebar, skip intro/explanation entirely.
       if (directFromSidebar) {

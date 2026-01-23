@@ -137,6 +137,9 @@ const ActivatePlatform = () => {
     
     // Check if user has a learning path gift
     if (user) {
+      // Clear any previous "seen" state to ensure animation plays
+      localStorage.removeItem(`gift_seen_${user.id}`);
+      
       const { data: profile } = await supabase
         .from('profiles')
         .select('learning_path')
@@ -144,7 +147,8 @@ const ActivatePlatform = () => {
         .single();
       
       if (profile?.learning_path) {
-        navigate('/presente');
+        // Pass fromActivation to ensure animation plays
+        navigate('/presente', { state: { fromActivation: true } });
         return;
       }
     }
