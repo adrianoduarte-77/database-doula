@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SecurityProvider } from "@/components/SecurityProvider";
 import AdminBypassGate from "@/components/AdminBypassGate";
 import Portal from "./pages/Portal";
 import CVPage from "./pages/CVPage";
@@ -29,33 +30,35 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Portal />} />
-            <Route path="/cv" element={<CVPage />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/ativar" element={<AdminBypassGate><ActivatePlatform /></AdminBypassGate>} />
-            <Route path="/meus-cvs" element={<MeusCVs />} />
-            <Route path="/minhas-cartas" element={<MinhasCartas />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/suporte" element={<SupportPage />} />
-            <Route path="/configuracoes" element={<SettingsPage />} />
-            <Route path="/presente" element={<AdminBypassGate><GiftPage /></AdminBypassGate>} />
-            <Route path="/etapa/1" element={<Stage1Page />} />
-            <Route path="/etapa/3" element={<Stage3Page />} />
-            <Route path="/etapa/4" element={<Stage4Page />} />
-            <Route path="/etapa/5" element={<Stage5Page />} />
-            <Route path="/etapa/6" element={<Stage6Page />} />
-            <Route path="/etapa/7" element={<Stage7Page />} />
-            <Route path="/etapa/:stageNumber" element={<StagePage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <SecurityProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Portal />} />
+              <Route path="/cv" element={<CVPage />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/ativar" element={<AdminBypassGate><ActivatePlatform /></AdminBypassGate>} />
+              <Route path="/meus-cvs" element={<MeusCVs />} />
+              <Route path="/minhas-cartas" element={<MinhasCartas />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/suporte" element={<SupportPage />} />
+              <Route path="/configuracoes" element={<SettingsPage />} />
+              <Route path="/presente" element={<AdminBypassGate><GiftPage /></AdminBypassGate>} />
+              <Route path="/etapa/1" element={<Stage1Page />} />
+              <Route path="/etapa/3" element={<Stage3Page />} />
+              <Route path="/etapa/4" element={<Stage4Page />} />
+              <Route path="/etapa/5" element={<Stage5Page />} />
+              <Route path="/etapa/6" element={<Stage6Page />} />
+              <Route path="/etapa/7" element={<Stage7Page />} />
+              <Route path="/etapa/:stageNumber" element={<StagePage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SecurityProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
