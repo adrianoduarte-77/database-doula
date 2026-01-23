@@ -44,14 +44,44 @@ const Auth = () => {
   );
 
   useEffect(() => {
-    if (user) {
+    const handleRedirectAfterAuth = async () => {
+      if (!user) return;
+
+      // Check if user is admin first
+      const { data: roleData } = await supabase.rpc('has_role', { 
+        _user_id: user.id, 
+        _role: 'admin' 
+      });
+      
+      if (roleData) {
+        // Admins go straight to portal
+        window.location.href = '/';
+        return;
+      }
+
+      // Check if platform is activated for non-admins
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('platform_activated')
+        .eq('user_id', user.id)
+        .single();
+
+      // If not activated, go directly to /ativar (no portal flash)
+      if (!profile?.platform_activated) {
+        window.location.href = '/ativar';
+        return;
+      }
+
+      // Activated users - check for pending CV
       const pendingCV = localStorage.getItem('pending_cv');
       if (pendingCV) {
         window.location.href = '/?openSaveModal=true';
       } else {
         window.location.href = '/';
       }
-    }
+    };
+
+    handleRedirectAfterAuth();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
