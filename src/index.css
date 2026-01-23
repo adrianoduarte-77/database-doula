@@ -561,3 +561,69 @@ div[style*="Edit with Lovable"],
   position: absolute !important;
   z-index: -9999 !important;
 }
+
+/* ==================== SECURITY STYLES ==================== */
+
+/* Prevent image dragging globally */
+img,
+video,
+[data-protected] {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+}
+
+/* Disable text selection on protected elements */
+.no-select,
+[data-no-select],
+.protected-asset {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Prevent copy on sensitive elements */
+.no-copy,
+[data-no-copy] {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Protected asset container */
+.protected-asset {
+  position: relative;
+}
+
+/* Invisible overlay for protected images */
+.protected-asset::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Disable printing (screen only styles) */
+@media print {
+  body {
+    display: none !important;
+  }
+  
+  * {
+    visibility: hidden !important;
+  }
+}
+
+/* Prevent touch callout on mobile (iOS) */
+img,
+video,
+a,
+[data-protected] {
+  -webkit-touch-callout: none !important;
+}
