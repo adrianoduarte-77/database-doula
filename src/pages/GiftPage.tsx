@@ -132,8 +132,9 @@ const GiftPage = () => {
         setStep('intro');
       }
     } else {
-      // No gift available, redirect back
-      navigate('/');
+      // No gift available - redirect back to portal
+      // Show a brief message before redirecting
+      navigate('/', { replace: true });
     }
   };
 

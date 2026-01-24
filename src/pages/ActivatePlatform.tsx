@@ -131,28 +131,17 @@ const ActivatePlatform = () => {
     }
   };
 
-  const handleWelcomeComplete = async () => {
+  const handleWelcomeComplete = () => {
     setShowWelcomeModal(false);
     
-    // Check if user has a learning path gift
+    // Always redirect to gift page after welcome - user must click the button
     if (user) {
       // Clear any previous "seen" state to ensure animation plays
       localStorage.removeItem(`gift_seen_${user.id}`);
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('learning_path')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (profile?.learning_path) {
-        // Pass fromActivation to ensure animation plays
-        navigate('/presente', { state: { fromActivation: true } });
-        return;
-      }
     }
     
-    navigate("/");
+    // Always navigate to presente after clicking "Começar Jornada"
+    navigate('/presente', { state: { fromActivation: true } });
   };
 
   if (authLoading || adminLoading || checkingActivation) {
