@@ -16,7 +16,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { MentorAvatar } from "./MentorAvatar";
 
 interface KeywordScript {
   keyword: string;
@@ -58,10 +57,27 @@ export const InterviewSimulator = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  // Combine experience scripts into one coherent text
+  // Combine experience scripts into one coherent text (plain for API)
   const combinedExperienceScript = experienceScripts
     .map(s => `${s.keyword}: ${s.script}`)
     .join('\n\n');
+
+  // Render experience scripts with highlighted keywords and company names
+  const renderExperienceScript = () => {
+    return experienceScripts.map((script, idx) => (
+      <div key={idx} className={idx > 0 ? "mt-4 pt-4 border-t border-border/50" : ""}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="px-2 py-0.5 bg-primary/20 text-primary rounded text-xs font-semibold">
+            {script.keyword}
+          </span>
+          <span className="text-primary font-medium text-sm">
+            {script.experience}
+          </span>
+        </div>
+        <p className="text-sm text-foreground/90">{script.script}</p>
+      </div>
+    ));
+  };
 
   const addRecruiterMessage = (message: string, delay: number = 0) => {
     return new Promise<void>((resolve) => {
@@ -96,12 +112,19 @@ export const InterviewSimulator = ({
     }
   }, []);
 
+  // Track which question we're recording for
+  const currentQuestionRef = useRef<1 | 2>(1);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+
+      // Capture which question we're on BEFORE starting
+      const questionNumber = phase === 'question1' || phase === 'recording1' ? 1 : 2;
+      currentQuestionRef.current = questionNumber;
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -112,10 +135,11 @@ export const InterviewSimulator = ({
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         
-        if (phase === 'recording1') {
+        // Use the ref value instead of phase state
+        if (currentQuestionRef.current === 1) {
           setAudioBlob1(audioBlob);
           startTransition();
-        } else if (phase === 'recording2') {
+        } else {
           setAudioBlob2(audioBlob);
           analyzePerformance();
         }
@@ -142,7 +166,7 @@ export const InterviewSimulator = ({
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -233,7 +257,9 @@ export const InterviewSimulator = ({
                     transition={{ duration: 0.3 }}
                     className="flex gap-3"
                   >
-                    <MentorAvatar className="w-8 h-8 flex-shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    </div>
                     <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
                       <p className="text-sm">{message}</p>
                     </div>
@@ -247,7 +273,9 @@ export const InterviewSimulator = ({
                   animate={{ opacity: 1 }}
                   className="flex gap-3"
                 >
-                  <MentorAvatar className="w-8 h-8 flex-shrink-0" />
+                  <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                  </div>
                   <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1">
                       <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -377,9 +405,15 @@ export const InterviewSimulator = ({
                   <p className="text-sm font-medium text-muted-foreground mb-2">
                     Use como referência:
                   </p>
-                  <div className="text-sm whitespace-pre-wrap">
-                    {getCurrentScript()}
-                  </div>
+                  {(phase === 'question1' || phase === 'recording1') ? (
+                    <div className="text-sm whitespace-pre-wrap">
+                      {aboutMeScript}
+                    </div>
+                  ) : (
+                    <div className="text-sm">
+                      {renderExperienceScript()}
+                    </div>
+                  )}
                 </div>
 
                 {isRecording && (
