@@ -52,6 +52,17 @@ type SimulatorPhase =
 
 const SIMULATOR_FEEDBACK_KEY = 'stage4_simulator_feedback';
 
+const readCachedFeedback = (): PerformanceFeedback | null => {
+  try {
+    const raw = sessionStorage.getItem(SIMULATOR_FEEDBACK_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PerformanceFeedback;
+    return parsed?.introduction ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 export const InterviewSimulator = ({ 
   aboutMeScript, 
   experienceScripts, 
@@ -59,40 +70,21 @@ export const InterviewSimulator = ({
   savedFeedback,
   onFeedbackGenerated,
 }: InterviewSimulatorProps) => {
-  // Check for saved feedback on mount
-  const getInitialState = (): { phase: SimulatorPhase; feedback: PerformanceFeedback | null } => {
-    // First check prop
-    if (savedFeedback) {
-      return { phase: 'feedback', feedback: savedFeedback };
-    }
-    // Then check sessionStorage
-    try {
-      const cached = sessionStorage.getItem(SIMULATOR_FEEDBACK_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached) as PerformanceFeedback;
-        if (parsed && parsed.introduction) {
-          return { phase: 'feedback', feedback: parsed };
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return { phase: 'intro', feedback: null };
-  };
-
-  const initialState = getInitialState();
-  
-  const [phase, setPhase] = useState<SimulatorPhase>(initialState.phase);
+  // Start pessimistically in intro, then promote to feedback if we find persisted results.
+  // This avoids a race where Stage4Guide hydrates savedFeedback AFTER this component mounts.
+  const [phase, setPhase] = useState<SimulatorPhase>('intro');
   const [isRecording, setIsRecording] = useState(false);
   const [transcript1, setTranscript1] = useState('');
   const [transcript2, setTranscript2] = useState('');
-  const [feedback, setFeedback] = useState<PerformanceFeedback | null>(initialState.feedback);
+  const [feedback, setFeedback] = useState<PerformanceFeedback | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState<string>(initialState.phase === 'feedback' ? '' : '');
+  const [currentMessage, setCurrentMessage] = useState<string>('');
   const [showTyping, setShowTyping] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
   
   const currentQuestionRef = useRef<1 | 2>(1);
+  const introStartedRef = useRef(false);
+  const cancelIntroRef = useRef(false);
   const { toast } = useToast();
 
   const {
@@ -128,9 +120,13 @@ export const InterviewSimulator = ({
   };
 
   const startIntro = async () => {
+    if (cancelIntroRef.current) return;
     await showMessage("Olá! Meu nome é Ana e serei a recrutadora responsável por conversar com você hoje.", 2000);
+    if (cancelIntroRef.current) return;
     await new Promise(r => setTimeout(r, 1500));
+    if (cancelIntroRef.current) return;
     await showMessage("Vamos começar... Me fale sobre você.", 1800);
+    if (cancelIntroRef.current) return;
     setPhase('question1');
   };
 
@@ -142,13 +138,29 @@ export const InterviewSimulator = ({
     setPhase('question2');
   };
 
+  // Promote to feedback if we have persisted results (prop wins over cache).
   useEffect(() => {
-    // Only start intro if we're not showing saved feedback
-    if (phase === 'intro' && !feedback) {
-      startIntro();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const persisted = savedFeedback ?? readCachedFeedback();
+    if (!persisted) return;
+
+    // If we already have feedback on screen, do nothing.
+    cancelIntroRef.current = true;
+    setFeedback((prev) => prev ?? persisted);
+    setPhase('feedback');
+    setShowTyping(false);
+    setCurrentMessage('');
+  }, [savedFeedback]);
+
+  // Start intro only when we're truly in "fresh run" mode.
+  useEffect(() => {
+    if (phase !== 'intro') return;
+    if (feedback) return;
+    if (introStartedRef.current) return;
+
+    cancelIntroRef.current = false;
+    introStartedRef.current = true;
+    void startIntro();
+  }, [phase, feedback]);
 
   // Show speech recognition errors
   useEffect(() => {
