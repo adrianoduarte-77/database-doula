@@ -363,12 +363,18 @@ const CVPage = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <nav className="flex items-center justify-between py-4 px-4 md:px-6 print:hidden animate-fade-in">
+      <motion.nav 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between py-4 px-4 md:px-6 print:hidden"
+      >
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <img src={logoAd} alt="AD Logo" className="h-14 w-auto" />
+          {/* Buttons always visible for logged users - no data dependency */}
           {user && (
             <>
               <Button variant="outline" size="sm" onClick={() => navigate('/meus-cvs')} className="gap-2">
@@ -406,7 +412,7 @@ const CVPage = () => {
             </Button>
           )}
         </div>
-      </nav>
+      </motion.nav>
 
       <div className="relative z-10 container max-w-4xl py-6 px-3 md:px-4 print:py-0 print:max-w-full">
         <AnimatePresence mode="wait">
@@ -436,21 +442,23 @@ const CVPage = () => {
                   onSelect={handleSelectCVType} 
                   onOptionsVisible={(visible) => {
                     if (visible) {
-                      // Delay showing completion section until after options appear
-                      setTimeout(() => setShowCompletionSection(true), 600);
+                      // Delay showing completion section until after all 3 cards appear
+                      // Cards appear at: 0.3s, 0.45s, 0.6s + animation duration ~0.5s
+                      // So completion card appears at ~1.2s after options visible
+                      setTimeout(() => setShowCompletionSection(true), 1200);
                     }
                   }}
                 />
                 
-                {/* Stage 2 Completion Section - appears only after options are visible AND data is loaded */}
+                {/* Stage 2 Completion Section - appears LAST after all cards are visible */}
                 <AnimatePresence>
                   {showCompletionSection && !isLoadingStageData && (
                     <motion.div
-                      initial={{ opacity: 0, y: 30 }}
+                      initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
                       transition={{ 
-                        duration: 0.8,
+                        duration: 0.6,
                         ease: [0.25, 0.46, 0.45, 0.94]
                       }}
                       className="mt-8"
