@@ -132,7 +132,7 @@ const impactPhrases = [
 
 const Portal = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const { isAdmin, isAdminSticky, loading: adminLoading } = useAdmin();
   
   // Effective admin status: either current check or sticky (once admin, always admin in session)
@@ -164,6 +164,7 @@ const Portal = () => {
   // Initialize userName from cache for instant display
   const [userName, setUserName] = useState<string | null>(cachedData?.userName || null);
   const [isDataReady, setIsDataReady] = useState(false);
+  const [isIdentityReady, setIsIdentityReady] = useState(false);
   const [linkedinDiagnostic, setLinkedinDiagnostic] = useState<LinkedInDiagnostic | null>(null);
   const [opportunityFunnel, setOpportunityFunnel] = useState<OpportunityFunnel | null>(null);
   const [savedCVs, setSavedCVs] = useState<SavedCV[]>([]);
@@ -184,8 +185,7 @@ const Portal = () => {
     impactPhrases[Math.floor(Math.random() * impactPhrases.length)]
   );
   
-  // If we have cached data for this user, show content immediately
-  const hasCachedData = !!cachedData;
+  // Cache still helps populate userName quickly, but UI is blocked until identity + data are confirmed.
 
   // Removed artificial delay timers - content now shows when data is ready
 
@@ -211,9 +211,14 @@ const Portal = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Hard reset gates when user changes
+      setIsDataReady(false);
+      setIsIdentityReady(false);
+
       // If no user, mark as ready immediately (guest view)
       if (!user?.id) {
         setIsDataReady(true);
+        setIsIdentityReady(true);
         return;
       }
       
@@ -271,7 +276,17 @@ const Portal = () => {
         }
       }
 
-      let extractedUserName: string | null = null;
+      const fallbackName = (() => {
+        const metaName = (user.user_metadata as any)?.full_name as string | undefined;
+        const fromMeta = metaName?.trim() ? metaName.trim().split(' ')[0] : null;
+        if (fromMeta) return fromMeta;
+
+        const email = user.email?.trim();
+        if (email) return email.split('@')[0] || null;
+        return null;
+      })();
+
+      let extractedUserName: string | null = fallbackName;
 
       if (profile) {
         const s2Unlocked = profile.stage2_unlocked ?? false;
@@ -282,10 +297,12 @@ const Portal = () => {
         setStage2Completed(s2Completed);
         setHasLearningPath(hasPath);
         
-        if (profile.full_name) {
-          extractedUserName = profile.full_name.split(' ')[0];
-          setUserName(extractedUserName);
+        if (profile.full_name?.trim()) {
+          extractedUserName = profile.full_name.trim().split(' ')[0];
         }
+
+        // Always set a non-null name when possible (prevents greeting race/blank)
+        if (extractedUserName) setUserName(extractedUserName);
 
         // Cache the user data for instant loading next time
         saveToCache({
@@ -328,12 +345,26 @@ const Portal = () => {
         setSavedCVs(cvsResult.data);
       }
 
+      // Identity is considered resolved once we have a stable name (or confirmed it's unavailable)
+      setIsIdentityReady(true);
+
       // All data loaded - show content
       setIsDataReady(true);
     };
 
     fetchData();
   }, [user?.id, adminLoading, effectiveIsAdmin, navigate]);
+
+  // Mandatory render lock: do not paint ANY portal UI until auth is resolved and
+  // (when logged in) both identity + data are fully loaded.
+  const renderGateReady = (() => {
+    if (authLoading) return false;
+    if (!user?.id) return isDataReady && isIdentityReady;
+    // Require a resolved name to avoid greeting popping in later.
+    // If for some reason we can't determine a name, we still unblock after identity step.
+    const hasName = !!userName;
+    return isDataReady && isIdentityReady && hasName;
+  })();
 
   const hasPersonalizedCV = savedCVs.some(cv => {
     const data = cv.cv_data as any;
@@ -463,11 +494,8 @@ const Portal = () => {
     { icon: Linkedin, label: 'LinkedIn', onClick: () => window.open('https://www.linkedin.com/in/oduarteoficial/', '_blank'), external: true },
   ];
 
-  // Show content immediately if we have cached data, otherwise wait for fresh data
-  const showContent = isDataReady || hasCachedData;
-
-  // Elegant loading screen while waiting for data (only shown on first visit without cache)
-  if (!showContent && user?.id) {
+  // HARD render gate: show nothing except the loading screen until the portal is fully ready.
+  if (!renderGateReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div 
