@@ -210,22 +210,27 @@ export function CVSelector({ onSelect, onOptionsVisible }: CVSelectorProps) {
         {showOptions && (
           <motion.div
             key="options"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
             className="w-full max-w-4xl mx-auto"
           >
-            {/* Header */}
-            <div className="text-center mb-10">
+            {/* Header - appears first */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0 }}
+              className="text-center mb-10"
+            >
               <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
                 Seus documentos <span className="text-gradient">estratégicos</span>
               </h2>
               <p className="text-muted-foreground text-sm max-w-lg mx-auto">
                 Cada modelo foi pensado pra maximizar suas chances. Mantenha a estrutura — ela funciona.
               </p>
-            </div>
+            </motion.div>
 
-            {/* Cards Grid with Indicators */}
+            {/* Cards Grid with Indicators - appear after header */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {cvOptions.map((option, index) => {
                 const Icon = option.icon;
@@ -235,16 +240,20 @@ export function CVSelector({ onSelect, onOptionsVisible }: CVSelectorProps) {
                 return (
                   <motion.div
                     key={option.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 * index }}
+                    transition={{ 
+                      duration: 0.5, 
+                      delay: 0.3 + (0.15 * index),
+                      ease: [0.25, 0.46, 0.45, 0.94]
+                    }}
                     className="flex flex-col items-center"
                   >
                     {/* Indicator above card */}
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + 0.1 * index }}
+                      transition={{ delay: 0.5 + 0.15 * index, duration: 0.4 }}
                       className="flex flex-col items-center mb-3"
                     >
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-2">
