@@ -74,6 +74,26 @@ const STEPS = [
 ];
 
 const STAGE4_STARTED_KEY = 'stage4_started';
+const STAGE4_VISITED_STEPS_KEY = 'stage4_visited_steps';
+
+// Helper to get visited steps from sessionStorage
+const getVisitedSteps = (): number[] => {
+  try {
+    const stored = sessionStorage.getItem(STAGE4_VISITED_STEPS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Helper to mark a step as visited
+const markStepVisited = (step: number) => {
+  const visited = getVisitedSteps();
+  if (!visited.includes(step)) {
+    visited.push(step);
+    sessionStorage.setItem(STAGE4_VISITED_STEPS_KEY, JSON.stringify(visited));
+  }
+};
 
 // Messages for "Sobre Você" intro
 const ABOUT_ME_INTRO_MESSAGES = [
@@ -92,15 +112,17 @@ const KEYWORDS_INTRO_MESSAGES = [
 
 export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
   const hasStartedBefore = sessionStorage.getItem(STAGE4_STARTED_KEY) === 'true';
+  const initialVisitedSteps = getVisitedSteps();
   
   const [showIntroduction, setShowIntroduction] = useState(!hasStartedBefore);
   const [currentStep, setCurrentStep] = useState(1);
+  const [visitedSteps, setVisitedSteps] = useState<number[]>(initialVisitedSteps);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedScripts, setSavedScripts] = useState<KeywordScript[]>([]);
-  const [showAboutMeIntro, setShowAboutMeIntro] = useState(true);
-  const [showKeywordsIntro, setShowKeywordsIntro] = useState(true);
+  const [showAboutMeIntro, setShowAboutMeIntro] = useState(!initialVisitedSteps.includes(5));
+  const [showKeywordsIntro, setShowKeywordsIntro] = useState(!initialVisitedSteps.includes(6));
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [data, setData] = useState<StepData>({
@@ -178,6 +200,23 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
 
     loadProgress();
   }, [user?.id]);
+
+  // Mark current step as visited and update intro visibility
+  useEffect(() => {
+    if (currentStep > 0) {
+      markStepVisited(currentStep);
+      setVisitedSteps(getVisitedSteps());
+      
+      // If step 5 was already visited, skip intro
+      if (currentStep === 5 && getVisitedSteps().includes(5)) {
+        setShowAboutMeIntro(false);
+      }
+      // If step 6 was already visited, skip intro  
+      if (currentStep === 6 && getVisitedSteps().includes(6)) {
+        setShowKeywordsIntro(false);
+      }
+    }
+  }, [currentStep]);
 
   const saveProgress = async (newData: StepData) => {
     if (!user?.id) return;
@@ -270,14 +309,23 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
     }
   };
 
-  const nextStep = () => {
+  // Safe navigation that saves progress before moving
+  const navigateToStep = async (targetStep: number) => {
+    // Save current data before navigating
+    await saveProgress(data);
+    setCurrentStep(targetStep);
+  };
+
+  const nextStep = async () => {
     if (currentStep < 9 && canProceed()) {
+      await saveProgress(data);
       setCurrentStep(prev => prev + 1);
     }
   };
 
-  const prevStep = () => {
+  const prevStep = async () => {
     if (currentStep > 1) {
+      await saveProgress(data);
       setCurrentStep(prev => prev - 1);
     }
   };
@@ -315,6 +363,10 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
         .delete()
         .eq('user_id', user.id)
         .eq('stage_number', 5);
+
+      // Clear sessionStorage for stage 4
+      sessionStorage.removeItem(STAGE4_STARTED_KEY);
+      sessionStorage.removeItem(STAGE4_VISITED_STEPS_KEY);
 
       toast({
         title: "Etapas reiniciadas!",
@@ -532,8 +584,8 @@ Exemplo:
         );
 
       case 5:
-        // Show intro or form based on state
-        if (showAboutMeIntro && !data.aboutMeScript) {
+        // Show intro only if step not visited before and no script yet
+        if (showAboutMeIntro && !data.aboutMeScript && !visitedSteps.includes(5)) {
           return (
             <motion.div
               key="step-5-intro"
@@ -571,8 +623,8 @@ Exemplo:
         );
 
       case 6:
-        // Show intro or content based on state
-        if (showKeywordsIntro && data.keywords.length === 0) {
+        // Show intro only if step not visited before and no keywords yet
+        if (showKeywordsIntro && data.keywords.length === 0 && !visitedSteps.includes(6)) {
           return (
             <motion.div
               key="step-6-intro"
@@ -953,7 +1005,7 @@ Exemplo:
             return (
               <div key={step.id} className="flex items-center">
                 <button
-                  onClick={() => isCompleted && setCurrentStep(step.id)}
+                  onClick={() => isCompleted && navigateToStep(step.id)}
                   disabled={!isCompleted && !isActive}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
                     isActive
