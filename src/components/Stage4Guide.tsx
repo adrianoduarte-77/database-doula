@@ -61,9 +61,9 @@ const STEPS = [
   { id: 2, title: "Vaga", icon: FileText, description: "Descrição da vaga" },
   { id: 3, title: "Seu Perfil", icon: User, description: "Sobre você no LinkedIn" },
   { id: 4, title: "Experiências", icon: Briefcase, description: "Suas experiências" },
-  { id: 5, title: "Palavras-Chave", icon: Target, description: "Análise da IA" },
-  { id: 6, title: "Roteiro", icon: Sparkles, description: "IA cria seu roteiro" },
-  { id: 7, title: "Sobre Você", icon: MessageSquare, description: "Me fale sobre você" },
+  { id: 5, title: "Sobre Você", icon: MessageSquare, description: "Me fale sobre você" },
+  { id: 6, title: "Palavras-Chave", icon: Target, description: "Análise da IA" },
+  { id: 7, title: "Roteiro", icon: Sparkles, description: "Roteiros de experiências" },
   { id: 8, title: "Resumo", icon: Check, description: "Seus roteiros prontos" },
 ];
 
@@ -124,7 +124,8 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
           if (isStageCompleted) {
             setCurrentStep(1);
           } else {
-            if (savedData.keywords.length > 0) setCurrentStep(6);
+            if (savedData.keywords.length > 0) setCurrentStep(7);
+            else if (savedData.aboutMeScript) setCurrentStep(6);
             else if (savedData.experiences) setCurrentStep(5);
             else if (savedData.linkedinAbout) setCurrentStep(4);
             else if (savedData.jobDescription) setCurrentStep(3);
@@ -194,7 +195,7 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
         const newData = { ...data, keywords: response.keywords };
         setData(newData);
         await saveProgress(newData);
-        setCurrentStep(6);
+        setCurrentStep(7);
       }
     } catch (error: any) {
       console.error('Error analyzing keywords:', error);
@@ -237,14 +238,14 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
       case 2: return data.jobDescription.trim().length > 0;
       case 3: return data.linkedinAbout.trim().length > 0;
       case 4: return data.experiences.trim().length > 0;
-      case 5: return data.keywords.length > 0;
-      case 7: return !!data.aboutMeScript;
+      case 5: return !!data.aboutMeScript;
+      case 6: return data.keywords.length > 0;
       default: return true;
     }
   };
 
   const nextStep = () => {
-    if (currentStep < 7 && canProceed()) {
+    if (currentStep < 8 && canProceed()) {
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -480,6 +481,25 @@ Exemplo:
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
           >
+            <AboutMeGenerator
+              onComplete={async (script) => {
+                const newData = { ...data, aboutMeScript: script };
+                setData(newData);
+                await saveProgress(newData);
+                setCurrentStep(6);
+              }}
+            />
+          </motion.div>
+        );
+
+      case 6:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Sparkles className="w-8 h-8 text-primary" />
@@ -594,7 +614,7 @@ análise de dados"
                       <p className="text-sm text-muted-foreground">
                         {data.keywords.length} palavras-chave detectadas
                       </p>
-                      <Button onClick={() => setCurrentStep(6)} className="gap-2">
+                      <Button onClick={() => setCurrentStep(7)} className="gap-2">
                         Continuar <ArrowRight className="w-4 h-4" />
                       </Button>
                     </div>
@@ -605,7 +625,7 @@ análise de dados"
           </motion.div>
         );
 
-      case 6:
+      case 7:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -636,25 +656,6 @@ análise de dados"
                 }
 
                 setSavedScripts(scripts);
-                setCurrentStep(7);
-              }}
-            />
-          </motion.div>
-        );
-
-      case 7:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            <AboutMeGenerator
-              onComplete={async (script) => {
-                const newData = { ...data, aboutMeScript: script };
-                setData(newData);
-                await saveProgress(newData);
                 setCurrentStep(8);
               }}
             />
@@ -753,7 +754,7 @@ análise de dados"
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setCurrentStep(7)}
+                onClick={() => setCurrentStep(5)}
                 className="w-full"
               >
                 Voltar e Editar "Sobre Você"
@@ -924,7 +925,7 @@ análise de dados"
         </div>
       )}
 
-      {currentStep === 5 && data.keywords.length === 0 && (
+      {currentStep === 6 && data.keywords.length === 0 && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border flex justify-start z-10">
           <Button
             variant="outline"
@@ -938,7 +939,7 @@ análise de dados"
       )}
 
       {/* Bottom padding to account for fixed footer */}
-      {(currentStep < 5 || (currentStep === 5 && data.keywords.length === 0)) && (
+      {(currentStep < 5 || (currentStep === 6 && data.keywords.length === 0)) && (
         <div className="h-20" />
       )}
     </div>
