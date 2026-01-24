@@ -1,17 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Mic, 
   Square, 
   Loader2, 
   User, 
   MessageSquare,
-  Play,
   CheckCircle2,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -50,60 +49,42 @@ export const InterviewSimulator = ({
   const [audioBlob2, setAudioBlob2] = useState<Blob | null>(null);
   const [feedback, setFeedback] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [recruiterMessages, setRecruiterMessages] = useState<string[]>([]);
+  const [currentMessage, setCurrentMessage] = useState<string>('');
   const [showTyping, setShowTyping] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const currentQuestionRef = useRef<1 | 2>(1);
   const { toast } = useToast();
 
-  // Combine experience scripts into one coherent text (plain for API)
   const combinedExperienceScript = experienceScripts
     .map(s => `${s.keyword}: ${s.script}`)
     .join('\n\n');
 
-  // Render experience scripts with highlighted keywords and company names
-  const renderExperienceScript = () => {
-    return experienceScripts.map((script, idx) => (
-      <div key={idx} className={idx > 0 ? "mt-4 pt-4 border-t border-border/50" : ""}>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-0.5 bg-primary/20 text-primary rounded text-xs font-semibold">
-            {script.keyword}
-          </span>
-          <span className="text-primary font-medium text-sm">
-            {script.experience}
-          </span>
-        </div>
-        <p className="text-sm text-foreground/90">{script.script}</p>
-      </div>
-    ));
-  };
-
-  const addRecruiterMessage = (message: string, delay: number = 0) => {
-    return new Promise<void>((resolve) => {
+  const showMessage = (message: string, delay: number = 1500): Promise<void> => {
+    return new Promise((resolve) => {
       setShowTyping(true);
       setTimeout(() => {
         setShowTyping(false);
-        setRecruiterMessages(prev => [...prev, message]);
+        setCurrentMessage(message);
         resolve();
       }, delay);
     });
   };
 
   const startIntro = async () => {
-    setRecruiterMessages([]);
-    await addRecruiterMessage("Olá, seja bem-vindo à nossa entrevista.", 1500);
-    await addRecruiterMessage("Meu nome é Ana e serei a recrutadora responsável por conversar com você hoje.", 2000);
-    await addRecruiterMessage("Vamos começar com uma pergunta clássica...", 1500);
+    await showMessage("Olá! Meu nome é Ana e serei a recrutadora responsável por conversar com você hoje.", 2000);
+    await new Promise(r => setTimeout(r, 1500));
+    await showMessage("Vamos começar... Me fale sobre você.", 1800);
     setPhase('question1');
-    await addRecruiterMessage("Me fale sobre você.", 1500);
   };
 
   const startTransition = async () => {
-    await addRecruiterMessage("Muito bom! Gostei de conhecer um pouco mais sobre você.", 2000);
-    await addRecruiterMessage("Agora, vamos para a próxima pergunta...", 1500);
+    setPhase('transition');
+    await showMessage("Muito bom! Gostei de conhecer um pouco mais sobre você.", 2000);
+    await new Promise(r => setTimeout(r, 1500));
+    await showMessage("Agora me fale sobre suas experiências profissionais.", 1800);
     setPhase('question2');
-    await addRecruiterMessage("Me fale sobre suas experiências profissionais.", 1800);
   };
 
   useEffect(() => {
@@ -112,9 +93,6 @@ export const InterviewSimulator = ({
     }
   }, []);
 
-  // Track which question we're recording for
-  const currentQuestionRef = useRef<1 | 2>(1);
-
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -122,7 +100,6 @@ export const InterviewSimulator = ({
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      // Capture which question we're on BEFORE starting
       const questionNumber = phase === 'question1' || phase === 'recording1' ? 1 : 2;
       currentQuestionRef.current = questionNumber;
 
@@ -135,7 +112,6 @@ export const InterviewSimulator = ({
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         
-        // Use the ref value instead of phase state
         if (currentQuestionRef.current === 1) {
           setAudioBlob1(audioBlob);
           startTransition();
@@ -175,6 +151,7 @@ export const InterviewSimulator = ({
   const analyzePerformance = async () => {
     setPhase('analyzing');
     setIsAnalyzing(true);
+    setCurrentMessage("Analisando seu desempenho...");
     
     try {
       const { data, error } = await supabase.functions.invoke('analyze-interview-performance', {
@@ -206,227 +183,238 @@ export const InterviewSimulator = ({
     }
   };
 
-  const getCurrentScript = () => {
-    if (phase === 'question1' || phase === 'recording1') {
-      return aboutMeScript;
-    }
-    return combinedExperienceScript;
-  };
-
-  const getCurrentScriptTitle = () => {
-    if (phase === 'question1' || phase === 'recording1') {
-      return '"Me fale sobre você"';
-    }
-    return '"Me fale sobre suas experiências"';
-  };
+  const isQuestionPhase = phase === 'question1' || phase === 'question2' || phase === 'recording1' || phase === 'recording2';
+  const showAboutScript = phase === 'question1' || phase === 'recording1';
+  const showExperienceScript = phase === 'question2' || phase === 'recording2';
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-          <MessageSquare className="w-8 h-8 text-primary" />
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-2"
+      >
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <MessageSquare className="w-7 h-7 text-primary" />
         </div>
         <h2 className="font-display text-2xl font-bold">Simulador de Entrevista</h2>
-        <p className="text-muted-foreground">
-          Pratique suas respostas com nosso recrutador virtual
+        <p className="text-muted-foreground text-sm">
+          Pratique suas respostas com a recrutadora virtual
         </p>
-      </div>
+      </motion.div>
 
-      <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-        {/* Left: Chat with recruiter */}
-        <Card className="p-4 flex flex-col h-[500px]">
-          <div className="flex items-center gap-3 pb-4 border-b border-border">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
+      {/* Single Unified Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="p-6 md:p-8 space-y-6">
+          
+          {/* Recruiter Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-lg">Ana</p>
+                <p className="text-xs text-muted-foreground">Recrutadora Virtual</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium">Ana</p>
-              <p className="text-xs text-muted-foreground">Recrutadora</p>
-            </div>
-          </div>
 
-          <ScrollArea className="flex-1 py-4">
-            <div className="space-y-4">
-              <AnimatePresence>
-                {recruiterMessages.map((message, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex gap-3"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
-                      <p className="text-sm">{message}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {showTyping && (
+            <AnimatePresence mode="wait">
+              {showTyping ? (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex gap-3"
+                  key="typing"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-muted/50 rounded-2xl rounded-tl-sm px-5 py-4 inline-block"
                 >
-                  <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </motion.div>
-              )}
-
-              {/* User responses */}
-              {audioBlob1 && (phase === 'transition' || phase === 'question2' || phase === 'recording2' || phase === 'analyzing' || phase === 'feedback') && (
+              ) : (
                 <motion.div
+                  key="message"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-3 justify-end"
+                  exit={{ opacity: 0 }}
+                  className="bg-muted/50 rounded-2xl rounded-tl-sm px-5 py-4 max-w-xl"
                 >
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-sm">Resposta gravada</span>
-                    </div>
+                  <p className="text-foreground">{currentMessage}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* User response confirmation */}
+            <AnimatePresence>
+              {audioBlob1 && (phase !== 'question1' && phase !== 'recording1' && phase !== 'intro') && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex justify-end"
+                >
+                  <div className="bg-primary/10 border border-primary/20 text-primary rounded-2xl rounded-tr-sm px-4 py-2.5 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sobre você ✓</span>
                   </div>
                 </motion.div>
               )}
-
               {audioBlob2 && (phase === 'analyzing' || phase === 'feedback') && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-3 justify-end"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex justify-end"
                 >
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-sm">Resposta gravada</span>
-                    </div>
+                  <div className="bg-primary/10 border border-primary/20 text-primary rounded-2xl rounded-tr-sm px-4 py-2.5 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Experiências ✓</span>
                   </div>
                 </motion.div>
               )}
-            </div>
-          </ScrollArea>
-
-          {/* Recording controls */}
-          {(phase === 'question1' || phase === 'question2' || phase === 'recording1' || phase === 'recording2') && (
-            <div className="pt-4 border-t border-border">
-              {!isRecording ? (
-                <Button 
-                  onClick={startRecording} 
-                  className="w-full gap-2"
-                  disabled={showTyping}
-                >
-                  <Mic className="w-4 h-4" />
-                  Iniciar Gravação
-                </Button>
-              ) : (
-                <Button 
-                  onClick={stopRecording} 
-                  variant="destructive"
-                  className="w-full gap-2"
-                >
-                  <Square className="w-4 h-4" />
-                  Parar Gravação
-                </Button>
-              )}
-            </div>
-          )}
-
-          {phase === 'analyzing' && (
-            <div className="pt-4 border-t border-border">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Analisando seu desempenho...</span>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Right: Script reference */}
-        <Card className="p-4 flex flex-col h-[500px]">
-          <div className="flex items-center gap-3 pb-4 border-b border-border">
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Seu Roteiro</p>
-              <p className="text-xs text-muted-foreground">
-                {phase === 'feedback' ? 'Feedback da IA' : getCurrentScriptTitle()}
-              </p>
-            </div>
+            </AnimatePresence>
           </div>
 
-          <ScrollArea className="flex-1 py-4">
-            {phase === 'feedback' ? (
+          {/* Divider */}
+          {isQuestionPhase && (
+            <motion.div
+              initial={{ opacity: 0, scaleX: 0 }}
+              animate={{ opacity: 1, scaleX: 1 }}
+              className="border-t border-dashed border-border/60"
+            />
+          )}
+
+          {/* Script Reference Section */}
+          <AnimatePresence mode="wait">
+            {isQuestionPhase && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                key={showAboutScript ? 'about' : 'experience'}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border border-primary/20">
-                  <h3 className="font-medium text-primary mb-3 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Análise de Desempenho
-                  </h3>
-                  <div className="text-sm whitespace-pre-wrap text-foreground/80">
-                    {feedback}
-                  </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-sm font-medium">Material de Apoio</span>
+                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                    {showAboutScript ? 'Sobre Você' : 'Experiências'}
+                  </span>
                 </div>
 
-                <Button onClick={onComplete} className="w-full gap-2">
-                  Finalizar Simulação
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </motion.div>
-            ) : phase === 'intro' ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                Aguarde o recrutador iniciar...
-              </div>
-            ) : (
-              <motion.div
-                key={phase}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-4"
-              >
-                <div className="p-4 bg-secondary/50 rounded-xl border border-border">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Use como referência:
-                  </p>
-                  {(phase === 'question1' || phase === 'recording1') ? (
-                    <div className="text-sm whitespace-pre-wrap">
+                <div className="bg-secondary/30 border border-border/50 rounded-xl p-5">
+                  {showAboutScript ? (
+                    <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
                       {aboutMeScript}
-                    </div>
+                    </p>
                   ) : (
-                    <div className="text-sm">
-                      {renderExperienceScript()}
+                    <div className="space-y-5">
+                      {experienceScripts.map((script, idx) => (
+                        <motion.div 
+                          key={idx}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className={idx > 0 ? "pt-5 border-t border-border/40" : ""}
+                        >
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className="px-3 py-1 bg-primary text-primary-foreground rounded-lg text-xs font-bold uppercase tracking-wide">
+                              {script.keyword}
+                            </span>
+                            <span className="px-3 py-1 bg-accent/80 text-accent-foreground rounded-lg text-xs font-semibold">
+                              {script.experience}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed text-foreground/85">
+                            {script.script}
+                          </p>
+                        </motion.div>
+                      ))}
                     </div>
                   )}
                 </div>
 
-                {isRecording && (
-                  <div className="flex items-center justify-center gap-2 text-destructive">
-                    <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                    <span className="text-sm font-medium">Gravando...</span>
-                  </div>
-                )}
+                {/* Recording Controls */}
+                <div className="pt-2">
+                  {isRecording ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center gap-3 py-3">
+                        <span className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+                        <span className="text-destructive font-medium">Gravando sua resposta...</span>
+                      </div>
+                      <Button 
+                        onClick={stopRecording} 
+                        variant="destructive"
+                        size="lg"
+                        className="w-full gap-2"
+                      >
+                        <Square className="w-4 h-4" />
+                        Parar e Enviar Resposta
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={startRecording} 
+                      size="lg"
+                      className="w-full gap-2"
+                      disabled={showTyping}
+                    >
+                      <Mic className="w-4 h-4" />
+                      Gravar Resposta
+                    </Button>
+                  )}
+                </div>
               </motion.div>
             )}
-          </ScrollArea>
+
+            {/* Analyzing Phase */}
+            {phase === 'analyzing' && (
+              <motion.div
+                key="analyzing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-8 text-center space-y-4"
+              >
+                <Loader2 className="w-10 h-10 text-primary mx-auto animate-spin" />
+                <p className="text-muted-foreground">Analisando seu desempenho...</p>
+              </motion.div>
+            )}
+
+            {/* Feedback Phase */}
+            {phase === 'feedback' && (
+              <motion.div
+                key="feedback"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-5"
+              >
+                <div className="p-5 bg-gradient-to-br from-primary/15 via-primary/10 to-accent/10 rounded-xl border border-primary/30">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-primary">Análise de Desempenho</h3>
+                  </div>
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                    {feedback}
+                  </div>
+                </div>
+
+                <Button onClick={onComplete} size="lg" className="w-full gap-2">
+                  Finalizar Simulação
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 };
