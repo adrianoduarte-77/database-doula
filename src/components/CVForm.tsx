@@ -11,10 +11,12 @@ import {
   FileText,
   CheckCircle,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { motion } from "framer-motion";
 
 export interface CVFormData {
   nome: string;
@@ -31,6 +33,10 @@ interface CVFormProps {
   onGenerate: (data: CVFormData) => void;
   isLoading: boolean;
 }
+
+// Locked/readonly input style for auto-filled fields
+const lockedInputClass = "w-full h-10 px-4 rounded-lg border border-muted-foreground/20 bg-muted/50 text-sm text-foreground cursor-default opacity-90";
+const normalInputClass = "w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200";
 
 export function CVForm({ onGenerate, isLoading }: CVFormProps) {
   const { personalData, isLoading: isLoadingProfile } = useUserProfile();
@@ -174,6 +180,18 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
     formData.experiences.trim().length > 50 &&
     formData.jobDescription.trim().length > 50;
 
+  // Show loading while profile is being fetched
+  if (isLoadingProfile) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando seus dados...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Personal Info Section */}
@@ -183,18 +201,32 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
           Dados Pessoais
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground">Nome Completo</label>
+        <motion.div 
+          className="space-y-1.5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.05 }}
+        >
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Nome Completo
+            {formData.nome && personalData.fullName && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+          </label>
           <input
             type="text"
             value={formData.nome}
             onChange={(e) => handleChange("nome", e.target.value)}
             placeholder="Seu nome completo"
-            className="w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+            readOnly={!!personalData.fullName}
+            className={personalData.fullName ? lockedInputClass : normalInputClass}
           />
-        </div>
+        </motion.div>
 
-        <div className="space-y-1.5">
+        <motion.div 
+          className="space-y-1.5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Briefcase className="w-3 h-3" />
             Cargos (separados por |)
@@ -204,50 +236,71 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
             value={formData.cargos}
             onChange={(e) => handleChange("cargos", e.target.value)}
             placeholder="Gerente de Marketing | Especialista em Branding | Coordenador"
-            className="w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+            className={normalInputClass}
           />
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="space-y-1.5">
+          <motion.div 
+            className="space-y-1.5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+          >
             <label className="flex items-center gap-2 text-xs text-muted-foreground h-4">
               <Phone className="w-3 h-3" />
               Telefone
+              {formData.telefone && personalData.phone && <Lock className="w-3 h-3 text-muted-foreground/60" />}
             </label>
             <input
               type="text"
               value={formData.telefone}
               onChange={(e) => handleChange("telefone", e.target.value)}
               placeholder="(11) 99999-9999"
-              className="w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              readOnly={!!personalData.phone}
+              className={personalData.phone ? lockedInputClass : normalInputClass}
             />
-          </div>
+          </motion.div>
 
-          <div className="space-y-1.5">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground h-4">
+          <motion.div 
+            className="space-y-1.5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground h-4">
               Email
+              {formData.email && personalData.email && <Lock className="w-3 h-3 text-muted-foreground/60" />}
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
               placeholder="seu@email.com"
-              className="w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              readOnly={!!personalData.email}
+              className={personalData.email ? lockedInputClass : normalInputClass}
             />
-          </div>
+          </motion.div>
 
-          <div className="space-y-1.5">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground h-4">
+          <motion.div 
+            className="space-y-1.5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+          >
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground h-4">
               LinkedIn
+              {formData.linkedin && personalData.linkedinUrl && <Lock className="w-3 h-3 text-muted-foreground/60" />}
             </label>
             <input
               type="text"
               value={formData.linkedin}
               onChange={(e) => handleChange("linkedin", e.target.value)}
               placeholder="linkedin.com/in/seuperfil"
-              className="w-full h-10 px-4 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              readOnly={!!personalData.linkedinUrl}
+              className={personalData.linkedinUrl ? lockedInputClass : normalInputClass}
             />
-          </div>
+          </motion.div>
         </div>
       </div>
 

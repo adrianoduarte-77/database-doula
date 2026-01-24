@@ -14,11 +14,12 @@ import {
   Trash2,
   ArrowLeft,
   Linkedin,
+  Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ATSCVData, IdiomaItem } from "@/types/ats-cv";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface ATSCVFormProps {
@@ -39,6 +40,9 @@ interface FormData {
   idiomas: IdiomaItem[];
 }
 
+// Locked/readonly input style for auto-filled fields
+const lockedInputClass = "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg bg-muted/50 border-muted-foreground/20 cursor-default opacity-90";
+
 export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
   const { personalData, isLoading: isLoadingProfile } = useUserProfile();
   
@@ -55,6 +59,7 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
     idiomas: [{ idioma: "", nivel: "" }],
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const { toast } = useToast();
 
   // Auto-fill personal data from profile
@@ -69,6 +74,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
         linkedin: prev.linkedin || personalData.linkedinUrl,
         idade: prev.idade || personalData.age,
       }));
+      // Mark profile as loaded after a brief delay for smooth animation
+      setTimeout(() => setIsProfileLoaded(true), 300);
     }
   }, [personalData, isLoadingProfile]);
 
@@ -149,6 +156,29 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
 
   const isValid = formData.experiencias.trim().length > 50 && formData.educacao.trim().length > 10;
 
+  // Show loading while profile is being fetched
+  if (isLoadingProfile) {
+    return (
+      <div className="space-y-8 md:space-y-6">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-2 -ml-2 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </Button>
+        
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando seus dados...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8 md:space-y-6">
       {/* Back Button */}
@@ -174,71 +204,119 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
           Dados Pessoais
         </div>
 
-        {/* Nome */}
-        <div className="space-y-2">
-          <label className="text-sm md:text-xs text-muted-foreground">Nome Completo</label>
+        {/* Nome - Locked field */}
+        <motion.div 
+          className="space-y-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.05 }}
+        >
+          <label className="flex items-center gap-1.5 text-sm md:text-xs text-muted-foreground">
+            Nome Completo
+            {formData.nome && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+          </label>
           <Input
             value={formData.nome}
             onChange={(e) => handleChange("nome", e.target.value.toUpperCase())}
             placeholder="LUCIANO DUARTE"
-            className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+            readOnly={!!personalData.fullName}
+            className={personalData.fullName ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
           />
-        </div>
+        </motion.div>
 
-        {/* Contact Row */}
+        {/* Contact Row - Telefone and Localização are locked */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-3">
-          <div className="space-y-2">
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             <label className="flex items-center gap-2 text-sm md:text-xs text-muted-foreground">
               <Phone className="w-4 h-4 md:w-3 md:h-3" />
               Telefone
+              {formData.telefone && <Lock className="w-3 h-3 text-muted-foreground/60" />}
             </label>
             <Input
               value={formData.telefone}
               onChange={(e) => handleChange("telefone", e.target.value)}
               placeholder="+55 11 98601-0599"
-              className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+              readOnly={!!personalData.phone}
+              className={personalData.phone ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
             />
-          </div>
+          </motion.div>
 
-          <div className="space-y-2">
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+          >
             <label className="flex items-center gap-2 text-sm md:text-xs text-muted-foreground">
               <MapPin className="w-4 h-4 md:w-3 md:h-3" />
               Localização
+              {formData.localizacao && <Lock className="w-3 h-3 text-muted-foreground/60" />}
             </label>
             <Input
               value={formData.localizacao}
               onChange={(e) => handleChange("localizacao", e.target.value)}
               placeholder="São Paulo, Brasil"
-              className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+              readOnly={!!personalData.location}
+              className={personalData.location ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
             />
-          </div>
+          </motion.div>
         </div>
 
+        {/* Email and LinkedIn - Locked fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-3">
-          <div className="space-y-2">
-            <label className="text-sm md:text-xs text-muted-foreground">E-mail</label>
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <label className="flex items-center gap-1.5 text-sm md:text-xs text-muted-foreground">
+              E-mail
+              {formData.email && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+            </label>
             <Input
               type="email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
               placeholder="seu@email.com"
-              className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+              readOnly={!!personalData.email}
+              className={personalData.email ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
             />
-          </div>
+          </motion.div>
 
-          <div className="space-y-2">
-            <label className="text-sm md:text-xs text-muted-foreground">LinkedIn</label>
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+          >
+            <label className="flex items-center gap-1.5 text-sm md:text-xs text-muted-foreground">
+              LinkedIn
+              {formData.linkedin && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+            </label>
             <Input
               value={formData.linkedin}
               onChange={(e) => handleChange("linkedin", e.target.value)}
               placeholder="linkedin.com/in/seuperfil"
-              className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+              readOnly={!!personalData.linkedinUrl}
+              className={personalData.linkedinUrl ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
             />
-          </div>
+          </motion.div>
         </div>
 
+        {/* Nacionalidade and Idade - only Idade is locked */}
         <div className="grid grid-cols-2 gap-4 md:gap-3">
-          <div className="space-y-2">
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             <label className="text-sm md:text-xs text-muted-foreground">Nacionalidade</label>
             <Input
               value={formData.nacionalidade}
@@ -246,17 +324,26 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
               placeholder="BRASILEIRO"
               className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
             />
-          </div>
+          </motion.div>
 
-          <div className="space-y-2">
-            <label className="text-sm md:text-xs text-muted-foreground">Idade</label>
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+          >
+            <label className="flex items-center gap-1.5 text-sm md:text-xs text-muted-foreground">
+              Idade
+              {formData.idade && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+            </label>
             <Input
               value={formData.idade}
               onChange={(e) => handleChange("idade", e.target.value)}
               placeholder="30 ANOS"
-              className="h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"
+              readOnly={!!personalData.age}
+              className={personalData.age ? lockedInputClass : "h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-lg"}
             />
-          </div>
+          </motion.div>
         </div>
       </motion.div>
 

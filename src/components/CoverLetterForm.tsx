@@ -4,12 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowLeft, Upload, FileText, Sparkles, Loader2, Info } from "lucide-react";
+import { ArrowLeft, Upload, FileText, Sparkles, Loader2, Info, Lock } from "lucide-react";
 import { CoverLetterFormData } from "@/types/cover-letter";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { motion } from "framer-motion";
 
 interface CoverLetterFormProps {
   open: boolean;
@@ -17,6 +18,9 @@ interface CoverLetterFormProps {
   onGenerate: (formData: CoverLetterFormData) => void;
   isLoading: boolean;
 }
+
+// Locked/readonly input style for auto-filled fields
+const lockedInputClass = "flex h-10 w-full rounded-md border border-muted-foreground/20 bg-muted/50 px-3 py-2 text-sm cursor-default opacity-90";
 
 export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: CoverLetterFormProps) {
   const { toast } = useToast();
@@ -196,28 +200,58 @@ export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: C
           </DialogDescription>
         </DialogHeader>
 
+        {/* Loading state */}
+        {isLoadingProfile ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Carregando seus dados...</p>
+          </div>
+        ) : (
         <div className="space-y-6 py-4">
           {/* Row 1: Nome e Idade */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="nome">Nome Completo *</Label>
+            <motion.div 
+              className="col-span-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.05 }}
+            >
+              <Label htmlFor="nome" className="flex items-center gap-1.5">
+                Nome Completo *
+                {formData.nome && personalData.fullName && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+              </Label>
               <Input
                 id="nome"
                 value={formData.nome}
                 onChange={(e) => handleChange('nome', e.target.value)}
                 placeholder="Seu nome completo"
+                readOnly={!!personalData.fullName}
+                className={personalData.fullName ? lockedInputClass : undefined}
               />
-            </div>
-            <div>
-              <Label htmlFor="idade">Idade</Label>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Label htmlFor="idade" className="flex items-center gap-1.5">
+                Idade
+                {formData.idade && personalData.age && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+              </Label>
               <Input
                 id="idade"
                 value={formData.idade}
                 onChange={(e) => handleChange('idade', e.target.value)}
                 placeholder="Ex: 28 anos"
+                readOnly={!!personalData.age}
+                className={personalData.age ? lockedInputClass : undefined}
               />
-            </div>
-            <div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
               <Label htmlFor="estadoCivil">Estado Civil</Label>
               <Input
                 id="estadoCivil"
@@ -225,21 +259,34 @@ export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: C
                 onChange={(e) => handleChange('estadoCivil', e.target.value)}
                 placeholder="Ex: Solteiro(a)"
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Row 2: Localização e Profissão */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="localizacao">Localização</Label>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Label htmlFor="localizacao" className="flex items-center gap-1.5">
+                Localização
+                {formData.localizacao && personalData.location && <Lock className="w-3 h-3 text-muted-foreground/60" />}
+              </Label>
               <Input
                 id="localizacao"
                 value={formData.localizacao}
                 onChange={(e) => handleChange('localizacao', e.target.value)}
                 placeholder="Cidade, Estado"
+                readOnly={!!personalData.location}
+                className={personalData.location ? lockedInputClass : undefined}
               />
-            </div>
-            <div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.25 }}
+            >
               <Label htmlFor="profissao">Profissão *</Label>
               <Input
                 id="profissao"
@@ -247,7 +294,7 @@ export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: C
                 onChange={(e) => handleChange('profissao', e.target.value)}
                 placeholder="Sua área de atuação"
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Row 3: Cargos */}
@@ -374,7 +421,8 @@ export function CoverLetterForm({ open, onOpenChange, onGenerate, isLoading }: C
               )}
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t border-border/50">
