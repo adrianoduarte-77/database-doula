@@ -394,6 +394,7 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
   };
 
   // Check if a step has been completed (data saved/validated)
+  // Steps 8 and 9 are only "completed" if the user has actually visited them
   const isStepCompleted = (stepId: number): boolean => {
     switch (stepId) {
       case 1: return data.companyName.trim().length > 0;
@@ -403,8 +404,10 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
       case 5: return !!data.aboutMeScript;
       case 6: return data.keywords.length > 0;
       case 7: return savedScripts.length > 0;
-      case 8: return true; // Simulator doesn't block
-      case 9: return true;
+      // Steps 8 and 9: only completed if user has moved PAST them (currentStep > stepId)
+      // or if they were visited AND user is past that point
+      case 8: return currentStep > 8 || (visitedSteps.includes(8) && currentStep >= 9);
+      case 9: return currentStep > 9 || visitedSteps.includes(9);
       default: return false;
     }
   };
