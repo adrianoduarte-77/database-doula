@@ -63,28 +63,8 @@ const STEPS = [
 ];
 
 const STAGE4_STARTED_KEY = 'stage4_started';
-const STAGE4_VISITED_STEPS_KEY = 'stage4_visited_steps';
 const STAGE4_DATA_CACHE_KEY = 'stage4_data_cache_v1';
 const STAGE4_SCRIPTS_CACHE_KEY = 'stage4_scripts_cache_v1';
-
-// Helper to get visited steps from sessionStorage
-const getVisitedSteps = (): number[] => {
-  try {
-    const stored = sessionStorage.getItem(STAGE4_VISITED_STEPS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-// Helper to mark a step as visited
-const markStepVisited = (step: number) => {
-  const visited = getVisitedSteps();
-  if (!visited.includes(step)) {
-    visited.push(step);
-    sessionStorage.setItem(STAGE4_VISITED_STEPS_KEY, JSON.stringify(visited));
-  }
-};
 
 // Messages for "Sobre Você" intro
 const ABOUT_ME_INTRO_MESSAGES = [
@@ -103,17 +83,16 @@ const KEYWORDS_INTRO_MESSAGES = [
 
 export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
   const hasStartedBefore = sessionStorage.getItem(STAGE4_STARTED_KEY) === 'true';
-  const initialVisitedSteps = getVisitedSteps();
   
   const [showIntroduction, setShowIntroduction] = useState(!hasStartedBefore);
   const [currentStep, setCurrentStep] = useState(1);
-  const [visitedSteps, setVisitedSteps] = useState<number[]>(initialVisitedSteps);
+  const [highestStepReached, setHighestStepReached] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedScripts, setSavedScripts] = useState<KeywordScript[]>([]);
-  const [showAboutMeIntro, setShowAboutMeIntro] = useState(!initialVisitedSteps.includes(5));
-  const [showKeywordsIntro, setShowKeywordsIntro] = useState(!initialVisitedSteps.includes(6));
+  const [showAboutMeIntro, setShowAboutMeIntro] = useState(true);
+  const [showKeywordsIntro, setShowKeywordsIntro] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [data, setData] = useState<StepData>({
@@ -248,22 +227,21 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
     loadProgress();
   }, [user?.id]);
 
-  // Mark current step as visited and update intro visibility
+  // Track highest step reached and update intro visibility
   useEffect(() => {
-    if (currentStep > 0) {
-      markStepVisited(currentStep);
-      setVisitedSteps(getVisitedSteps());
-      
-      // If step 5 was already visited, skip intro
-      if (currentStep === 5 && getVisitedSteps().includes(5)) {
-        setShowAboutMeIntro(false);
-      }
-      // If step 6 was already visited, skip intro  
-      if (currentStep === 6 && getVisitedSteps().includes(6)) {
-        setShowKeywordsIntro(false);
-      }
+    if (currentStep > highestStepReached) {
+      setHighestStepReached(currentStep);
     }
-  }, [currentStep]);
+    
+    // If user reaches step 5 for the first time, show intro; on revisit, skip
+    if (currentStep === 5 && highestStepReached >= 5) {
+      setShowAboutMeIntro(false);
+    }
+    // If user reaches step 6 for the first time, show intro; on revisit, skip
+    if (currentStep === 6 && highestStepReached >= 6) {
+      setShowKeywordsIntro(false);
+    }
+  }, [currentStep, highestStepReached]);
 
   const saveProgress = async (newData: StepData) => {
     if (!user?.id) return;
@@ -393,10 +371,9 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
       case 5: return !!data.aboutMeScript;
       case 6: return data.keywords.length > 0;
       case 7: return savedScripts.length > 0;
-      // Steps 8 and 9: only completed if user has moved PAST them (currentStep > stepId)
-      // or if they were visited AND user is past that point
-      case 8: return currentStep > 8 || (visitedSteps.includes(8) && currentStep >= 9);
-      case 9: return currentStep > 9 || visitedSteps.includes(9);
+      // Steps 8 and 9: only completed if user has moved PAST them
+      case 8: return currentStep > 8;
+      case 9: return currentStep > 9;
       default: return false;
     }
   };
@@ -413,8 +390,8 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
     }
 
     // Going forward: only if current step is completed AND target is the next one
-    // OR if target step was already visited (allowing re-visit of completed steps)
-    const canGoForward = isStepCompleted(currentStep) && (targetStep === currentStep + 1 || visitedSteps.includes(targetStep));
+    // OR if target step was already reached (allowing re-visit of completed steps)
+    const canGoForward = isStepCompleted(currentStep) && (targetStep === currentStep + 1 || targetStep <= highestStepReached);
     
     if (canGoForward) {
       hasUserNavigatedRef.current = true;
@@ -646,8 +623,8 @@ Exemplo:
         );
 
       case 5:
-        // Show intro only if step not visited before and no script yet
-        if (showAboutMeIntro && !data.aboutMeScript && !visitedSteps.includes(5)) {
+        // Show intro only if no script yet and first time on step 5
+        if (showAboutMeIntro && !data.aboutMeScript && highestStepReached < 5) {
           return (
             <motion.div
               key="step-5-intro"
@@ -685,8 +662,8 @@ Exemplo:
         );
 
       case 6:
-        // Show intro only if step not visited before and no keywords yet
-        if (showKeywordsIntro && data.keywords.length === 0 && !visitedSteps.includes(6)) {
+        // Show intro only if no keywords yet and first time on step 6
+        if (showKeywordsIntro && data.keywords.length === 0 && highestStepReached < 6) {
           return (
             <motion.div
               key="step-6-intro"
@@ -860,7 +837,7 @@ Exemplo:
         const step9IntroKey = 'stage4_step9_intro_seen';
         const hasSeenStep9Intro = sessionStorage.getItem(step9IntroKey) === 'true';
         
-        if (!hasSeenStep9Intro && !visitedSteps.includes(9)) {
+        if (!hasSeenStep9Intro && highestStepReached < 9) {
           // Mark as seen immediately to avoid re-showing
           sessionStorage.setItem(step9IntroKey, 'true');
           
@@ -880,14 +857,7 @@ Exemplo:
                   Você completou a preparação! Seus roteiros estão prontos para você revisar e praticar.
                 </p>
               </div>
-              <Button onClick={() => {
-                const visited = [...visitedSteps];
-                if (!visited.includes(9)) {
-                  visited.push(9);
-                  setVisitedSteps(visited);
-                  sessionStorage.setItem(STAGE4_VISITED_STEPS_KEY, JSON.stringify(visited));
-                }
-              }} className="gap-2">
+              <Button onClick={() => setHighestStepReached(9)} className="gap-2">
                 Ver Meus Roteiros
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -1073,12 +1043,12 @@ Exemplo:
             // - It's a previous step (going back is always allowed)
             // - It's the current step
             // - It's the next step and current is completed
-            // - It was visited before with valid data (allows revisiting)
-            const wasVisited = visitedSteps.includes(step.id);
+            // - It was reached before with valid data (allows revisiting)
+            const wasReached = step.id <= highestStepReached;
             const canNavigate = step.id < currentStep || 
                                (step.id === currentStep) || 
                                (step.id === currentStep + 1 && canProceed()) ||
-                               (wasVisited && hasValidData && step.id < currentStep);
+                               (wasReached && hasValidData && step.id < currentStep);
             const Icon = step.icon;
 
             return (
