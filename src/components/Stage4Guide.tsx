@@ -19,20 +19,8 @@ import {
   Target,
   Lightbulb,
   MessageSquare,
-  RotateCcw,
   Mic
 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -457,61 +445,6 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
     }
   };
 
-  const resetStage = async () => {
-    if (!user?.id) return;
-
-    try {
-      await supabase
-        .from('collected_data')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('data_type', 'stage4_data');
-
-      await supabase
-        .from('collected_data')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('data_type', 'stage4_interview_experiences');
-
-      await supabase
-        .from('mentoring_progress')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('stage_number', 4);
-
-      await supabase
-        .from('collected_data')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('data_type', 'stage5_data');
-
-      await supabase
-        .from('mentoring_progress')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('stage_number', 5);
-
-      // Clear sessionStorage for stage 4
-      sessionStorage.removeItem(STAGE4_STARTED_KEY);
-      sessionStorage.removeItem(STAGE4_VISITED_STEPS_KEY);
-      sessionStorage.removeItem(STAGE4_DATA_CACHE_KEY);
-      sessionStorage.removeItem(STAGE4_SCRIPTS_CACHE_KEY);
-
-      toast({
-        title: "Etapas reiniciadas!",
-        description: "As etapas 4 e 5 foram reiniciadas. Você pode começar um novo roteiro.",
-      });
-
-      navigate('/');
-    } catch (error) {
-      console.error('Error resetting stage:', error);
-      toast({
-        title: "Erro ao reiniciar",
-        description: "Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1120,35 +1053,6 @@ Exemplo:
           >
             <HelpCircle className="w-5 h-5" />
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reiniciar Etapa 4?</AlertDialogTitle>
-                <AlertDialogDescription className="space-y-2">
-                  <span className="block">
-                    Isso irá apagar todos os dados desta etapa, incluindo roteiros e palavras-chave.
-                  </span>
-                  <span className="block text-destructive font-medium">
-                    ⚠️ Atenção: A Etapa 5 também será reiniciada, pois depende dos dados desta etapa.
-                  </span>
-                  <span className="block">
-                    Você poderá criar um novo roteiro para outra entrevista.
-                  </span>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={resetStage} className="bg-destructive hover:bg-destructive/90">
-                  Reiniciar Etapas 4 e 5
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
 
