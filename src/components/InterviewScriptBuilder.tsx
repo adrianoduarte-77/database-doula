@@ -75,28 +75,32 @@ export const InterviewScriptBuilder = ({
   initialScripts,
   onScriptsChange,
 }: InterviewScriptBuilderProps) => {
+  // Check if we have scripts on initial render (synchronous check to skip intro)
+  const hasInitialScriptsRef = useRef((initialScripts?.length ?? 0) > 0);
+  
   const [experiences, setExperiences] = useState<Experience[]>([
     { id: '1', company: '', role: '', selectedKeywords: [] }
   ]);
   const [expandedExp, setExpandedExp] = useState<string | null>('1');
-  const hasInitialScripts = (initialScripts?.length ?? 0) > 0;
-  const [conversationStep, setConversationStep] = useState(hasInitialScripts ? mentorMessages.length : 0);
-  const [showBuilder, setShowBuilder] = useState(hasInitialScripts);
+  const [conversationStep, setConversationStep] = useState(hasInitialScriptsRef.current ? mentorMessages.length : 0);
+  const [showBuilder, setShowBuilder] = useState(hasInitialScriptsRef.current);
   const [isGeneratingScripts, setIsGeneratingScripts] = useState(false);
   const [generatedScripts, setGeneratedScripts] = useState<KeywordScript[]>(initialScripts || []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
   const [careerIntro, setCareerIntro] = useState<CareerIntro | null>(null);
   const [isLoadingIntro, setIsLoadingIntro] = useState(false);
+  const [introAlreadyLoaded, setIntroAlreadyLoaded] = useState(false);
 
   const persistTimerRef = useRef<number | null>(null);
 
-  // Keep local state in sync when parent rehydrates scripts
+  // Keep local state in sync when parent rehydrates scripts (but don't regenerate)
   useEffect(() => {
     if (initialScripts && initialScripts.length > 0) {
       setGeneratedScripts(initialScripts);
       setConversationStep(mentorMessages.length);
       setShowBuilder(true);
+      hasInitialScriptsRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(initialScripts || [])]);
@@ -113,11 +117,17 @@ export const InterviewScriptBuilder = ({
     };
   }, [generatedScripts, onScriptsChange]);
 
-  // Load career intro when component mounts
+  // Load career intro ONLY ONCE and ONLY if we don't have scripts already
   useEffect(() => {
+    // Skip if we already have scripts - no need to load intro
+    if (hasInitialScriptsRef.current) return;
+    // Skip if already loaded to prevent duplicate calls
+    if (introAlreadyLoaded) return;
+    
     const loadCareerIntro = async () => {
       if (!linkedinAbout || linkedinAbout.trim().length < 50) return;
       
+      setIntroAlreadyLoaded(true);
       setIsLoadingIntro(true);
       try {
         const { data, error } = await supabase.functions.invoke('generate-career-intro', {
@@ -136,10 +146,11 @@ export const InterviewScriptBuilder = ({
     };
 
     loadCareerIntro();
-  }, [linkedinAbout]);
+  }, [linkedinAbout, introAlreadyLoaded]);
 
   useEffect(() => {
-    if (hasInitialScripts) return;
+    // Skip intro animation entirely if scripts exist
+    if (hasInitialScriptsRef.current) return;
     if (conversationStep < mentorMessages.length) {
       const timer = setTimeout(() => {
         setConversationStep(prev => prev + 1);
@@ -149,7 +160,7 @@ export const InterviewScriptBuilder = ({
       const timer = setTimeout(() => setShowBuilder(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [conversationStep, showBuilder, hasInitialScripts]);
+  }, [conversationStep, showBuilder]);
 
   const addExperience = () => {
     if (experiences.length < 5) {
