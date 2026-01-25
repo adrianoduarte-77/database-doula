@@ -46,6 +46,7 @@ import { StepConversationIntro } from "./StepConversationIntro";
 import { InterviewSimulator } from "./InterviewSimulator";
 import { SaveInterviewModal } from "./SaveInterviewModal";
 import { InterviewHistoryList } from "./InterviewHistoryList";
+import { MentorAvatar } from "./MentorAvatar";
 
 interface Stage4GuideProps {
   stageNumber: number;
@@ -922,6 +923,45 @@ Exemplo:
         );
 
       case 9:
+        // Show intro only on first visit to step 9 in this session
+        const step9IntroKey = 'stage4_step9_intro_seen';
+        const hasSeenStep9Intro = sessionStorage.getItem(step9IntroKey) === 'true';
+        
+        if (!hasSeenStep9Intro && !visitedSteps.includes(9)) {
+          // Mark as seen immediately to avoid re-showing
+          sessionStorage.setItem(step9IntroKey, 'true');
+          
+          return (
+            <motion.div
+              key="step-9-intro"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4"
+            >
+              <MentorAvatar size="xxl" />
+              <div className="text-center space-y-3 max-w-md">
+                <h2 className="font-display text-2xl font-bold">Parabéns! 🎉</h2>
+                <p className="text-muted-foreground">
+                  Você completou a preparação! Seus roteiros estão prontos para você revisar e praticar.
+                </p>
+              </div>
+              <Button onClick={() => {
+                const visited = [...visitedSteps];
+                if (!visited.includes(9)) {
+                  visited.push(9);
+                  setVisitedSteps(visited);
+                  sessionStorage.setItem(STAGE4_VISITED_STEPS_KEY, JSON.stringify(visited));
+                }
+              }} className="gap-2">
+                Ver Meus Roteiros
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </motion.div>
+          );
+        }
+        
         return (
           <motion.div
             key="step-9"
