@@ -113,9 +113,8 @@ export function ATSCVPreview({ data, onReset, onSave, onDataChange }: ATSCVPrevi
       blocks.push({ type: "right-align", lines: headerLines });
     }
 
-    // Separator line and Name
+    // Name
     blocks.push({ type: "spacer", size: 6 });
-    blocks.push({ type: "separator" });
     blocks.push({ type: "title", text: currentData.nome });
 
     // Experiências
