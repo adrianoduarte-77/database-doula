@@ -42,9 +42,18 @@ export function CoverLetterPreview({ data, onBack, onSave }: CoverLetterPreviewP
     const filename = `carta-apresentacao-${activeTab}.pdf`;
     const blocks: PdfTextBlock[] = [
       { type: "title", text: model.titulo },
-      { type: "paragraph", text: model.conteudo },
-      { type: "paragraph", text: `CTA: ${model.cta}` },
+      { type: "spacer", size: 4 },
     ];
+
+    // Split content into paragraphs for better formatting
+    const paragraphs = model.conteudo.split('\n\n').filter(p => p.trim());
+    for (const p of paragraphs) {
+      blocks.push({ type: "paragraph", text: p });
+      blocks.push({ type: "spacer", size: 2 });
+    }
+
+    blocks.push({ type: "spacer", size: 4 });
+    blocks.push({ type: "subtitle", text: model.cta });
 
     exportTextPdf({ filename, blocks });
   };

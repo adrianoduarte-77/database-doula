@@ -22,47 +22,73 @@ export function CVPreview({ data, onReset, onUpdate, onSave }: CVPreviewProps) {
   const handleExportPdf = () => {
     const filename = `curriculo-${data.nome.toLowerCase().replace(/\s+/g, '-')}.pdf`;
 
-    const blocks: PdfTextBlock[] = [
-      { type: "title", text: data.nome },
-      { type: "paragraph", text: data.cargos },
-      {
-        type: "paragraph",
-        text: [data.telefone, data.email, data.linkedin].filter(Boolean).join(" | "),
-      },
+    const blocks: PdfTextBlock[] = [];
 
-      { type: "heading", text: "Sumário" },
-      ...data.sumario.paragrafos.map((p) => ({ type: "paragraph", text: p } as const)),
-      ...data.sumario.bullets.map((b) => ({ type: "bullet", text: b } as const)),
+    // Header
+    blocks.push({ type: "title", text: data.nome });
+    blocks.push({ type: "subtitle", text: data.cargos });
+    blocks.push({
+      type: "paragraph",
+      text: [data.telefone, data.email, data.linkedin].filter(Boolean).join(" | "),
+    });
 
-      { type: "heading", text: "Sistemas" },
-      ...data.sistemas.map((s) => ({ type: "bullet", text: s } as const)),
+    // Sumário
+    blocks.push({ type: "heading", text: "Sumário" });
+    for (const p of data.sumario.paragrafos) {
+      blocks.push({ type: "paragraph", text: p });
+    }
+    for (const b of data.sumario.bullets) {
+      blocks.push({ type: "bullet", text: b });
+    }
 
-      { type: "heading", text: "Skills" },
-      ...data.skills.map((s) => ({ type: "bullet", text: s } as const)),
+    // Sistemas
+    blocks.push({ type: "heading", text: "Sistemas" });
+    for (const s of data.sistemas) {
+      blocks.push({ type: "bullet", text: s });
+    }
 
-      { type: "heading", text: "Competências" },
-      ...data.competencias.map((s) => ({ type: "bullet", text: s } as const)),
+    // Skills
+    blocks.push({ type: "heading", text: "Skills" });
+    for (const s of data.skills) {
+      blocks.push({ type: "bullet", text: s });
+    }
 
-      { type: "heading", text: "Realizações" },
-      ...data.realizacoes.map((s) => ({ type: "bullet", text: s } as const)),
+    // Competências
+    blocks.push({ type: "heading", text: "Competências" });
+    for (const s of data.competencias) {
+      blocks.push({ type: "bullet", text: s });
+    }
 
-      { type: "heading", text: "Educação & Qualificações" },
-      ...data.educacao
-        .filter((item) => item.curso && item.curso.trim().length > 0)
-        .map((item) => ({
-          type: "bullet",
-          text: `${item.curso}${item.instituicao?.trim() ? ` – ${item.instituicao}` : ""}`,
-        }) as const),
+    // Realizações
+    blocks.push({ type: "heading", text: "Realizações" });
+    for (const s of data.realizacoes) {
+      blocks.push({ type: "bullet", text: s });
+    }
 
-      { type: "heading", text: "Experiências Profissionais" },
-      ...data.experiencias.flatMap((exp) => {
-        const header = `${exp.empresa} — ${exp.cargo}`;
-        const arr: PdfTextBlock[] = [{ type: "paragraph", text: header }];
-        if (exp.periodo?.trim()) arr.push({ type: "paragraph", text: exp.periodo });
-        arr.push(...exp.bullets.map((b) => ({ type: "bullet", text: b } as const)));
-        return arr;
-      }),
-    ];
+    // Educação
+    blocks.push({ type: "heading", text: "Educação & Qualificações" });
+    for (const item of data.educacao) {
+      if (!item.curso?.trim()) continue;
+      blocks.push({
+        type: "bullet",
+        text: `${item.curso}${item.instituicao?.trim() ? ` – ${item.instituicao}` : ""}`,
+      });
+    }
+
+    // Experiências
+    blocks.push({ type: "heading", text: "Experiências Profissionais" });
+    for (const exp of data.experiencias) {
+      blocks.push({
+        type: "subheading",
+        text: `${exp.empresa} — ${exp.cargo}`,
+      });
+      if (exp.periodo?.trim()) {
+        blocks.push({ type: "paragraph", text: exp.periodo.toUpperCase() });
+      }
+      for (const b of exp.bullets) {
+        blocks.push({ type: "bullet", text: b });
+      }
+    }
 
     exportTextPdf({ filename, blocks });
   };

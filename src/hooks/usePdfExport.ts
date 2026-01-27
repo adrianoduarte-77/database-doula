@@ -4,9 +4,14 @@ import { useToast } from "@/hooks/use-toast";
 
 export type PdfTextBlock =
   | { type: "title"; text: string }
+  | { type: "subtitle"; text: string }
   | { type: "heading"; text: string }
+  | { type: "subheading"; text: string }
   | { type: "paragraph"; text: string }
-  | { type: "bullet"; text: string };
+  | { type: "bullet"; text: string }
+  | { type: "spacer"; size?: number }
+  | { type: "separator" }
+  | { type: "right-align"; lines: string[] };
 
 interface UsePdfExportOptions {
   filename?: string;
@@ -34,7 +39,7 @@ export function usePdfExport(options: UsePdfExportOptions = {}) {
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 14;
+      const margin = 15;
       const maxWidth = pageWidth - margin * 2;
 
       let y = margin;
@@ -54,50 +59,112 @@ export function usePdfExport(options: UsePdfExportOptions = {}) {
         }
       };
 
-      // Basic typography
-      pdf.setTextColor(20, 20, 20);
+      const writeRightAligned = (lines: string[], lineHeight: number) => {
+        for (const line of lines) {
+          ensureSpace(lineHeight);
+          const textWidth = pdf.getTextWidth(line);
+          pdf.text(line, pageWidth - margin - textWidth, y);
+          y += lineHeight;
+        }
+      };
+
+      // Colors
+      const black = [20, 20, 20] as const;
+      const blue = [29, 78, 216] as const;
+      const gray = [100, 100, 100] as const;
 
       for (const block of input.blocks) {
-        if (!block.text?.trim()) continue;
-
-        if (block.type === "title") {
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(18);
-          const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
-          writeLines(lines, 8);
-          y += 2;
+        if (block.type === "spacer") {
+          y += block.size || 4;
           continue;
         }
 
-        if (block.type === "heading") {
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(12);
-          y += 2;
-          const lines = pdf.splitTextToSize(block.text.trim().toUpperCase(), maxWidth);
-          writeLines(lines, 6);
-          y += 1;
-          pdf.setDrawColor(200, 200, 200);
-          ensureSpace(2);
+        if (block.type === "separator") {
+          ensureSpace(3);
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.5);
           pdf.line(margin, y, pageWidth - margin, y);
           y += 4;
           continue;
         }
 
-        if (block.type === "paragraph") {
+        if (block.type === "right-align") {
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(10);
+          pdf.setTextColor(...black);
+          writeRightAligned(block.lines, 4.5);
+          continue;
+        }
+
+        if (!("text" in block) || !block.text?.trim()) continue;
+
+        if (block.type === "title") {
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(22);
+          pdf.setTextColor(...black);
+          const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
+          writeLines(lines, 9);
+          y += 3;
+          continue;
+        }
+
+        if (block.type === "subtitle") {
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(11);
+          pdf.setTextColor(...gray);
           const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
-          writeLines(lines, 5.2);
+          writeLines(lines, 5);
           y += 2;
+          continue;
+        }
+
+        if (block.type === "heading") {
+          y += 6; // Space before heading
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(12);
+          pdf.setTextColor(...black);
+          const lines = pdf.splitTextToSize(block.text.trim().toUpperCase(), maxWidth);
+          writeLines(lines, 6);
+          y += 2;
+          continue;
+        }
+
+        if (block.type === "subheading") {
+          y += 5; // Space before subheading (experience header)
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(11);
+          pdf.setTextColor(...black);
+          const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
+          writeLines(lines, 5.5);
+          continue;
+        }
+
+        if (block.type === "paragraph") {
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(10);
+          pdf.setTextColor(...black);
+          const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
+          writeLines(lines, 4.5);
+          y += 1;
           continue;
         }
 
         // bullet
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(11);
-        const bulletPrefix = "• ";
-        const lines = pdf.splitTextToSize(bulletPrefix + block.text.trim(), maxWidth);
-        writeLines(lines, 5.2);
+        pdf.setFontSize(10);
+        pdf.setTextColor(...black);
+        const bulletText = block.text.trim();
+        const bulletLines = pdf.splitTextToSize(bulletText, maxWidth - 4);
+        for (let i = 0; i < bulletLines.length; i++) {
+          ensureSpace(4.5);
+          if (i === 0) {
+            pdf.text("•", margin, y);
+            pdf.text(bulletLines[i], margin + 4, y);
+          } else {
+            pdf.text(bulletLines[i], margin + 4, y);
+          }
+          y += 4.5;
+        }
       }
 
       const filename = input.filename || options.filename || "documento.pdf";

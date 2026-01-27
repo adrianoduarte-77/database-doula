@@ -90,38 +90,49 @@ export function ATSCVPreview({ data, onReset, onSave, onDataChange }: ATSCVPrevi
 
     const blocks: PdfTextBlock[] = [];
 
-    // Header info
+    // Header info - right aligned
+    const headerLines: string[] = [];
     if (currentData.telefone) {
-      blocks.push({ type: "paragraph", text: `${currentLabels.telefone}: ${currentData.telefone}` });
+      headerLines.push(`${currentLabels.telefone} : ${currentData.telefone}`);
     }
     if (currentData.localizacao) {
-      blocks.push({ type: "paragraph", text: `${currentLabels.localizacao}: ${currentData.localizacao}` });
+      headerLines.push(`${currentLabels.localizacao} : ${currentData.localizacao}`);
     }
     if (currentData.email) {
-      blocks.push({ type: "paragraph", text: `${currentLabels.email}: ${currentData.email}` });
+      headerLines.push(`${currentLabels.email} : ${currentData.email}`);
     }
     if (currentData.linkedin) {
-      blocks.push({ type: "paragraph", text: `${currentLabels.linkedin}: ${currentData.linkedin}` });
+      headerLines.push(`${currentLabels.linkedin} : ${currentData.linkedin}`);
     }
     if (currentData.nacionalidade || currentData.idade) {
-      blocks.push({
-        type: "paragraph",
-        text: `${currentData.nacionalidade || ""}${currentData.nacionalidade && currentData.idade ? ", " : ""}${currentData.idade ? `${currentData.idade} ANOS` : ""}`,
-      });
+      headerLines.push(
+        `${(currentData.nacionalidade || "").toUpperCase()}${currentData.nacionalidade && currentData.idade ? ", " : ""}${currentData.idade ? `${currentData.idade} ANOS.` : ""}`
+      );
+    }
+    if (headerLines.length > 0) {
+      blocks.push({ type: "right-align", lines: headerLines });
     }
 
+    // Separator line and Name
+    blocks.push({ type: "spacer", size: 6 });
+    blocks.push({ type: "separator" });
     blocks.push({ type: "title", text: currentData.nome });
 
     // Experiências
     if (currentData.experiencias.length > 0) {
       blocks.push({ type: "heading", text: currentLabels.experiencias });
       for (const exp of currentData.experiencias) {
+        // Experience header: EMPRESA, Local — Cargo
         blocks.push({
-          type: "paragraph",
-          text: `${exp.empresa}${exp.localizacao ? `, ${exp.localizacao}` : ""} — ${exp.cargo}`,
+          type: "subheading",
+          text: `${exp.empresa}${exp.localizacao ? `, ${exp.localizacao}` : ""}  —  ${exp.cargo}`,
         });
-        if (exp.periodo?.trim()) blocks.push({ type: "paragraph", text: exp.periodo.toUpperCase() });
-        for (const b of exp.bullets) blocks.push({ type: "bullet", text: b });
+        if (exp.periodo?.trim()) {
+          blocks.push({ type: "paragraph", text: exp.periodo.toUpperCase() });
+        }
+        for (const b of exp.bullets) {
+          blocks.push({ type: "bullet", text: b });
+        }
       }
     }
 
