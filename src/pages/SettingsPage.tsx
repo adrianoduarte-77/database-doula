@@ -393,44 +393,22 @@ const SettingsPage = () => {
             <Separator className="bg-border/50" />
 
             <div className="space-y-6">
-              {/* Change Password */}
-              <div className="p-5 rounded-2xl bg-card/40 border border-border/40 space-y-4">
+              {/* Change Password - TEMPORARILY DISABLED */}
+              <div className="p-5 rounded-2xl bg-card/20 border border-border/30 space-y-4 opacity-60">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Alterar senha</p>
-                    <p className="text-xs text-muted-foreground">Atualize sua senha regularmente</p>
+                    <p className="font-medium text-muted-foreground">Alterar senha</p>
+                    <p className="text-xs text-muted-foreground">Em breve disponível</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Nova senha"
-                    className="h-11 bg-background/50 border-border/50 rounded-xl"
-                  />
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirmar nova senha"
-                    className="h-11 bg-background/50 border-border/50 rounded-xl"
-                  />
-                  <Button
-                    onClick={handleChangePassword}
-                    disabled={changingPassword || !newPassword || !confirmPassword}
-                    variant="outline"
-                    className="w-full h-11 rounded-xl border-primary/30 hover:bg-primary/10"
-                  >
-                    {changingPassword ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Alterar senha
-                  </Button>
+                <div className="p-4 rounded-xl bg-muted/20 border border-border/30 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Esta funcionalidade estará disponível em breve.
+                  </p>
                 </div>
               </div>
 
