@@ -413,30 +413,33 @@ const Portal = () => {
   };
 
   const isStageBlocked = (stageNumber: number) => {
-    // Dev users have access to ALL stages - no restrictions
-    if (effectiveIsDev) return false;
-    
-    if (stageNumber === 1) {
-      return linkedinDiagnostic?.status !== 'published';
-    }
-
-    if (stageNumber === 2) {
-      // Admin always has Stage 2 unlocked
-      if (effectiveIsAdmin) return false;
-      return !stage2Unlocked;
-    }
-
-    if (stageNumber === 3) {
-      return !stage2Completed;
-    }
-
-    if (stageNumber === 4) {
+    // TEMPORARY: Block all stages except 2 for non-admin users
+    // Admins and dev users have full access
+    if (effectiveIsAdmin || effectiveIsDev) {
+      // Original logic for admin/dev
+      if (stageNumber === 1) {
+        return linkedinDiagnostic?.status !== 'published';
+      }
+      if (stageNumber === 2) {
+        return !stage2Unlocked;
+      }
+      if (stageNumber === 3) {
+        return !stage2Completed;
+      }
+      if (stageNumber === 5) {
+        return savedInterviews.length === 0;
+      }
       return false;
     }
+    
+    // TEMPORARY: For regular users, block stages 1, 3, 4, 5, 6, 7
+    if ([1, 3, 4, 5, 6, 7].includes(stageNumber)) {
+      return true;
+    }
 
-    if (stageNumber === 5) {
-      // Stage 5 is unlocked when user has at least one saved interview
-      return savedInterviews.length === 0;
+    // Stage 2 follows normal unlock logic
+    if (stageNumber === 2) {
+      return !stage2Unlocked;
     }
 
     return false;

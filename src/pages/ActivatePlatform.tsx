@@ -134,24 +134,8 @@ const ActivatePlatform = () => {
   const handleWelcomeComplete = async () => {
     setShowWelcomeModal(false);
     
-    // Check if user has a learning path gift
-    if (user) {
-      // Clear any previous "seen" state to ensure animation plays
-      localStorage.removeItem(`gift_seen_${user.id}`);
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('learning_path')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (profile?.learning_path) {
-        // Pass fromActivation to ensure animation plays
-        navigate('/presente', { state: { fromActivation: true } });
-        return;
-      }
-    }
-    
+    // TEMPORARY: Skip gift animation - go directly to portal
+    // The gift page logic is preserved but bypassed for now
     navigate("/");
   };
 

@@ -1,27 +1,44 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useDev } from '@/hooks/useDev';
 import { Stage7Guide } from '@/components/Stage7Guide';
+import { Loader2 } from 'lucide-react';
 
 const Stage7Page = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isDev, loading: devLoading } = useDev();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
+    // Wait for all loading states
+    if (authLoading || adminLoading || devLoading) return;
 
-  if (loading) {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    // TEMPORARY: Block stage 7 for non-admin/dev users
+    if (!isAdmin && !isDev) {
+      navigate('/');
+      return;
+    }
+  }, [user, authLoading, adminLoading, devLoading, isAdmin, isDev, navigate]);
+
+  // Show loading while checking permissions
+  if (authLoading || adminLoading || devLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!user) {
+  // Don't render if user will be redirected
+  if (!user || (!isAdmin && !isDev)) {
     return null;
   }
 

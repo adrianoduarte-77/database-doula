@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useDev } from '@/hooks/useDev';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -66,6 +68,8 @@ const STAGE_1_SEEN_KEY = 'stage1_animation_seen';
 
 const Stage1Page = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isDev, loading: devLoading } = useDev();
   const navigate = useNavigate();
   const { downloadFile, loading: downloadLoading } = useSignedUrl();
   const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
@@ -83,15 +87,22 @@ const Stage1Page = () => {
   const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    // Wait for all loading states
+    if (authLoading || adminLoading || devLoading) return;
+    
+    if (!user) {
       navigate('/auth');
       return;
     }
 
-    if (user) {
-      fetchDiagnostic();
+    // TEMPORARY: Block stage 1 for non-admin/dev users
+    if (!isAdmin && !isDev) {
+      navigate('/');
+      return;
     }
-  }, [user, authLoading, navigate]);
+
+    fetchDiagnostic();
+  }, [user, authLoading, adminLoading, devLoading, isAdmin, isDev, navigate]);
 
   const fetchDiagnostic = async () => {
     try {
