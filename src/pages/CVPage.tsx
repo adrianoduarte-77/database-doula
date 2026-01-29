@@ -411,11 +411,11 @@ const CVPage = () => {
         </div>
       </nav>
 
-      <div className="relative z-10 container max-w-4xl py-4 md:py-6 px-3 md:px-4 print:py-0 print:max-w-full">
+      <div className="relative z-10 container max-w-4xl py-4 md:py-6 px-4 md:px-4 print:py-0 print:max-w-full">
         <AnimatePresence mode="wait">
           {viewState !== "selector" && (
-            <motion.header key={`header-${viewState}-${cvType}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center mb-4 md:mb-10 print:hidden">
-              <h1 className="text-xl md:text-5xl font-display font-bold">
+            <motion.header key={`header-${viewState}-${cvType}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center mb-2 md:mb-10 print:hidden">
+              <h1 className="text-2xl md:text-5xl font-display font-bold">
                 {cvType === "ats" ? (
                   <><span className="text-foreground">Currículo </span><span className="text-gradient">ATS</span></>
                 ) : cvType === "cover-letter" ? (
@@ -431,8 +431,8 @@ const CVPage = () => {
           )}
         </AnimatePresence>
 
-        {/* Main content - centered with breathing room on mobile */}
-        <main className="relative mx-auto max-w-[92%] md:max-w-full">
+        {/* Main content - full width on mobile for open layout */}
+        <main className="relative mx-auto md:max-w-full">
           <AnimatePresence mode="wait">
             {viewState === "selector" && (
               <motion.div key="selector" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

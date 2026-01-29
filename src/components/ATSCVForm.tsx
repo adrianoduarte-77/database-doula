@@ -280,12 +280,327 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
     );
   }
 
-  // Compact input class for mobile
-  const inputClass = "h-10 text-sm rounded-lg border-border/50 focus:border-primary/50";
+  // Mobile: lighter, more breathable input styles
+  const inputClass = isMobile 
+    ? "h-11 text-base rounded-xl bg-muted/20 border-transparent focus:border-primary/40 focus:bg-muted/30 placeholder:text-muted-foreground/40" 
+    : "h-10 text-sm rounded-lg border-border/50 focus:border-primary/50";
 
+  const textareaClass = isMobile
+    ? "text-base rounded-xl bg-muted/20 border-transparent focus:border-primary/40 focus:bg-muted/30 placeholder:text-muted-foreground/40 resize-none"
+    : "text-sm rounded-lg border-border/50 resize-none";
+
+  // Mobile section header style - simple and clean
+  const SectionHeader = ({ icon, title, step }: { icon: React.ReactNode; title: string; step?: number }) => (
+    <div className={`flex items-center gap-3 ${isMobile ? 'pt-6 pb-3' : 'pb-2'}`}>
+      {isMobile && step && (
+        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+          {step}
+        </span>
+      )}
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        {icon}
+        {title}
+      </div>
+    </div>
+  );
+
+  // Mobile-only: simple expandable section (not boxed)
+  const MobileSection = ({ 
+    title, 
+    icon, 
+    step,
+    isOpen, 
+    onToggle, 
+    hasContent,
+    children 
+  }: { 
+    title: string; 
+    icon: React.ReactNode; 
+    step: number;
+    isOpen: boolean; 
+    onToggle: () => void;
+    hasContent?: boolean;
+    children: React.ReactNode;
+  }) => (
+    <div className="border-t border-border/20 pt-2">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-4 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold transition-colors ${
+            hasContent 
+              ? 'bg-primary/20 text-primary' 
+              : isOpen 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted/40 text-muted-foreground'
+          }`}>
+            {hasContent ? <Check className="w-3.5 h-3.5" /> : step}
+          </span>
+          <span className={`text-base font-medium transition-colors ${
+            isOpen ? 'text-foreground' : 'text-muted-foreground'
+          }`}>
+            {title}
+          </span>
+        </div>
+        <ChevronRight className={`w-5 h-5 text-muted-foreground/50 transition-transform duration-200 ${
+          isOpen ? 'rotate-90' : ''
+        }`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="pb-4 space-y-4">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+  // MOBILE LAYOUT - Open, breathable, no heavy container
+  if (isMobile) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-0">
+        {/* Back Button - subtle, top aligned */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="gap-1.5 text-sm text-muted-foreground hover:text-foreground h-9 -ml-2 mb-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </Button>
+
+        {/* Personal Data - always visible, open layout */}
+        <div className="space-y-5">
+          <SectionHeader 
+            icon={<User className="w-4 h-4 text-primary" />} 
+            title="Seus Dados" 
+          />
+
+          {/* Name - full width, prominent */}
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">Nome completo</label>
+            <Input
+              value={formData.nome}
+              onChange={(e) => handleChange("nome", e.target.value.toUpperCase())}
+              placeholder="SEU NOME COMPLETO"
+              readOnly={!!personalData.fullName}
+              className={personalData.fullName ? `${inputClass} opacity-70` : inputClass}
+            />
+          </div>
+
+          {/* Email - full width */}
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">E-mail</label>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              placeholder="seu@email.com"
+              readOnly={!!personalData.email}
+              className={personalData.email ? `${inputClass} opacity-70` : inputClass}
+            />
+          </div>
+
+          {/* Phone + Location - side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Telefone</label>
+              <Input
+                value={formData.telefone}
+                onChange={(e) => handleChange("telefone", e.target.value)}
+                placeholder="(11) 99999-9999"
+                readOnly={!!personalData.phone}
+                className={personalData.phone ? `${inputClass} opacity-70` : inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Cidade</label>
+              <Input
+                value={formData.localizacao}
+                onChange={(e) => handleChange("localizacao", e.target.value)}
+                placeholder="São Paulo, SP"
+                readOnly={!!personalData.location}
+                className={personalData.location ? `${inputClass} opacity-70` : inputClass}
+              />
+            </div>
+          </div>
+
+          {/* LinkedIn - full width */}
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">LinkedIn</label>
+            <Input
+              value={formData.linkedin}
+              onChange={(e) => handleChange("linkedin", e.target.value)}
+              placeholder="linkedin.com/in/seuperfil"
+              readOnly={!!personalData.linkedinUrl}
+              className={personalData.linkedinUrl ? `${inputClass} opacity-70` : inputClass}
+            />
+          </div>
+
+          {/* Nationality + Age */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Nacionalidade</label>
+              <Input
+                value={formData.nacionalidade}
+                onChange={(e) => handleChange("nacionalidade", e.target.value.toUpperCase())}
+                placeholder="BRASILEIRO"
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Idade</label>
+              <Input
+                value={formData.idade}
+                onChange={(e) => handleChange("idade", e.target.value)}
+                placeholder="30 ANOS"
+                readOnly={!!personalData.age}
+                className={personalData.age ? `${inputClass} opacity-70` : inputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible Sections - Clean, step-by-step */}
+        <MobileSection
+          title="Experiências Profissionais"
+          icon={<Briefcase className="w-4 h-4 text-primary" />}
+          step={1}
+          isOpen={openSection === 'experiencias'}
+          onToggle={() => handleSectionToggle('experiencias')}
+          hasContent={formData.experiencias.trim().length > 0}
+        >
+          <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-muted/20">
+            <Linkedin className="w-4 h-4 text-[#0A66C2] mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              Copie suas experiências do LinkedIn e cole aqui
+            </p>
+          </div>
+          <Textarea
+            value={formData.experiencias}
+            onChange={(e) => handleChange("experiencias", e.target.value)}
+            placeholder="Cole aqui suas experiências profissionais..."
+            className={`min-h-[140px] p-4 ${textareaClass}`}
+          />
+        </MobileSection>
+
+        <MobileSection
+          title="Formação Acadêmica"
+          icon={<GraduationCap className="w-4 h-4 text-primary" />}
+          step={2}
+          isOpen={openSection === 'educacao'}
+          onToggle={() => handleSectionToggle('educacao')}
+          hasContent={formData.educacao.trim().length > 0}
+        >
+          <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-muted/20">
+            <Linkedin className="w-4 h-4 text-[#0A66C2] mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              Copie sua formação acadêmica e certificados
+            </p>
+          </div>
+          <Textarea
+            value={formData.educacao}
+            onChange={(e) => handleChange("educacao", e.target.value)}
+            placeholder="Cole aqui sua formação..."
+            className={`min-h-[120px] p-4 ${textareaClass}`}
+          />
+        </MobileSection>
+
+        <MobileSection
+          title="Idiomas"
+          icon={<Languages className="w-4 h-4 text-primary" />}
+          step={3}
+          isOpen={openSection === 'idiomas'}
+          onToggle={() => handleSectionToggle('idiomas')}
+          hasContent={formData.idiomas.some(i => i.idioma.trim().length > 0)}
+        >
+          <div className="space-y-3">
+            {formData.idiomas.map((idioma, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <Input
+                  value={idioma.idioma}
+                  onChange={(e) => handleIdiomaChange(index, "idioma", e.target.value)}
+                  placeholder="Inglês"
+                  className={`flex-1 ${inputClass}`}
+                />
+                <Input
+                  value={idioma.nivel}
+                  onChange={(e) => handleIdiomaChange(index, "nivel", e.target.value.toUpperCase())}
+                  placeholder="FLUENTE"
+                  className={`flex-1 ${inputClass}`}
+                />
+                {formData.idiomas.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeIdioma(index)}
+                    className="shrink-0 w-10 h-10 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addIdioma}
+              className="gap-2 text-sm h-10 text-muted-foreground hover:text-foreground w-full justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar idioma
+            </Button>
+          </div>
+        </MobileSection>
+
+        {/* Submit Button - prominent, with good spacing */}
+        <div className="pt-8 pb-4">
+          <Button
+            type="submit"
+            disabled={!isValid || isLoading}
+            className="w-full gap-2.5 h-14 text-base font-medium rounded-2xl shadow-lg shadow-primary/25 disabled:shadow-none transition-all"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                Gerar Currículo ATS
+              </>
+            )}
+          </Button>
+          {!isValid && (
+            <p className="text-sm text-muted-foreground/60 text-center mt-3">
+              Preencha experiências e formação para continuar
+            </p>
+          )}
+        </div>
+      </form>
+    );
+  }
+
+  // DESKTOP LAYOUT - Original structure preserved
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-      {/* Back Button - subtle */}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Back Button */}
       <Button
         type="button"
         variant="ghost"
@@ -297,20 +612,19 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
         Voltar
       </Button>
 
-      {/* Personal Info Section - Always visible, streamlined */}
+      {/* Personal Info Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="space-y-2.5"
+        className="space-y-3"
       >
         <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
           <User className="w-4 h-4 text-primary" />
           Seus Dados
         </div>
 
-        {/* Nome */}
-        <div className="space-y-1">
-          <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
             Nome
             {formData.nome && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
           </label>
@@ -323,10 +637,9 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
           />
         </div>
 
-        {/* Telefone + Localização - compact grid */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
               Telefone
               {formData.telefone && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
             </label>
@@ -339,8 +652,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
               Cidade
               {formData.localizacao && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
             </label>
@@ -354,9 +667,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
           </div>
         </div>
 
-        {/* Email - full width for readability */}
-        <div className="space-y-1">
-          <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
             E-mail
             {formData.email && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
           </label>
@@ -370,9 +682,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
           />
         </div>
 
-        {/* LinkedIn */}
-        <div className="space-y-1">
-          <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
             LinkedIn
             {formData.linkedin && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
           </label>
@@ -385,10 +696,9 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
           />
         </div>
 
-        {/* Nacionalidade + Idade - compact */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">
               Nacionalidade
             </label>
             <Input
@@ -399,8 +709,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="flex items-center gap-1 text-[11px] text-muted-foreground uppercase tracking-wide">
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
               Idade
               {formData.idade && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
             </label>
@@ -415,76 +725,52 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
         </div>
       </motion.div>
 
-      {/* Divider - subtle on mobile */}
-      {isMobile && (
-        <div className="flex items-center gap-3 py-1">
-          <div className="flex-1 h-px bg-border/30" />
-          <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Cole do LinkedIn</span>
-          <div className="flex-1 h-px bg-border/30" />
+      {/* Experiences Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <Briefcase className="w-4 h-4 text-primary" />
+          Experiências Profissionais
         </div>
-      )}
-
-      {/* Experiences Section - Collapsible on mobile */}
-      <CollapsibleSection
-        title="Experiências"
-        icon={<Briefcase className="w-4 h-4 text-primary" />}
-        isOpen={openSection === 'experiencias'}
-        onToggle={() => handleSectionToggle('experiencias')}
-        isMobile={isMobile}
-        hasContent={formData.experiencias.trim().length > 0}
-        stepNumber={1}
-      >
-        {/* Tip box - more subtle */}
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-muted/30 border border-border/30">
           <Linkedin className="w-3.5 h-3.5 text-[#0A66C2] mt-0.5 shrink-0" />
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Copie suas experiências do LinkedIn e cole aqui
           </p>
         </div>
-
         <Textarea
           value={formData.experiencias}
           onChange={(e) => handleChange("experiencias", e.target.value)}
           placeholder="Cole aqui suas experiências..."
-          className="min-h-[120px] md:min-h-[180px] text-sm rounded-lg p-3 border-border/50 resize-none"
+          className="min-h-[180px] text-sm rounded-lg p-3 border-border/50 resize-none"
         />
-      </CollapsibleSection>
+      </div>
 
-      {/* Education Section - Collapsible on mobile */}
-      <CollapsibleSection
-        title="Formação"
-        icon={<GraduationCap className="w-4 h-4 text-primary" />}
-        isOpen={openSection === 'educacao'}
-        onToggle={() => handleSectionToggle('educacao')}
-        isMobile={isMobile}
-        hasContent={formData.educacao.trim().length > 0}
-        stepNumber={2}
-      >
+      {/* Education Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <GraduationCap className="w-4 h-4 text-primary" />
+          Formação Acadêmica
+        </div>
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-muted/30 border border-border/30">
           <Linkedin className="w-3.5 h-3.5 text-[#0A66C2] mt-0.5 shrink-0" />
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Copie sua formação acadêmica e certificados
           </p>
         </div>
-
         <Textarea
           value={formData.educacao}
           onChange={(e) => handleChange("educacao", e.target.value)}
           placeholder="Cole sua formação..."
-          className="min-h-[100px] md:min-h-[140px] text-sm rounded-lg p-3 border-border/50 resize-none"
+          className="min-h-[140px] text-sm rounded-lg p-3 border-border/50 resize-none"
         />
-      </CollapsibleSection>
+      </div>
 
-      {/* Languages Section - Collapsible on mobile */}
-      <CollapsibleSection
-        title="Idiomas"
-        icon={<Languages className="w-4 h-4 text-primary" />}
-        isOpen={openSection === 'idiomas'}
-        onToggle={() => handleSectionToggle('idiomas')}
-        isMobile={isMobile}
-        hasContent={formData.idiomas.some(i => i.idioma.trim().length > 0)}
-        stepNumber={3}
-      >
+      {/* Languages Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <Languages className="w-4 h-4 text-primary" />
+          Idiomas
+        </div>
         <div className="space-y-2">
           {formData.idiomas.map((idioma, index) => (
             <div key={index} className="flex gap-2 items-center">
@@ -524,14 +810,14 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
             Adicionar idioma
           </Button>
         </div>
-      </CollapsibleSection>
+      </div>
 
-      {/* Submit Button - prominent, with breathing room */}
+      {/* Submit Button */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="pt-4 md:pt-2 pb-2"
+        className="pt-2 pb-2"
       >
         <Button
           type="submit"
