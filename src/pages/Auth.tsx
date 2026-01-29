@@ -145,16 +145,50 @@ const Auth = () => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
               >
-                <Input placeholder="Nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                <Input placeholder="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                <Input placeholder="Idade" value={age} onChange={(e) => setAge(e.target.value)} />
-                <Input placeholder="Localização" value={location} onChange={(e) => setLocation(e.target.value)} />
-                <Input
-                  placeholder="LinkedIn (opcional)"
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                />
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="Nome completo"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
 
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="Telefone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input className="pl-10" placeholder="Idade" value={age} onChange={(e) => setAge(e.target.value)} />
+                </div>
+
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="Localização"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+
+                <div className="relative">
+                  <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="LinkedIn (opcional)"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                  />
+                </div>
                 <Button type="button" disabled={!isStep1Valid} onClick={goNextStep} className="w-full">
                   Continuar <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
