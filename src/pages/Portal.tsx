@@ -437,9 +437,9 @@ const Portal = () => {
       return true;
     }
 
-    // Stage 2 follows normal unlock logic
+    // TEMPORARY: Stage 2 is ALWAYS unlocked for regular users in temporary mode
     if (stageNumber === 2) {
-      return !stage2Unlocked;
+      return false; // Always unlocked
     }
 
     return false;

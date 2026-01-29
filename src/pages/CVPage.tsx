@@ -447,7 +447,9 @@ const CVPage = () => {
                   }}
                 />
                 
-                {/* Stage 2 Completion Section - appears LAST after all cards are visible */}
+                {/* TEMPORARY: Stage 2 Completion Section is hidden in temporary mode
+                    To re-enable, uncomment the block below and remove this comment:
+                    
                 <AnimatePresence>
                   {showCompletionSection && !isLoadingStageData && (
                     <motion.div
@@ -502,7 +504,6 @@ const CVPage = () => {
                           )}
                         </div>
 
-                        {/* Document checklist */}
                         {!stage2Completed && (
                           <div className="mt-4 pt-4 border-t border-border/30">
                             <p className="text-xs text-muted-foreground mb-2">Documentos criados:</p>
@@ -523,6 +524,7 @@ const CVPage = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                */}
               </motion.div>
             )}
             {viewState === "form" && cvType === "personalized" && (<motion.div key="personalized-form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="bg-gradient-card rounded-2xl p-6 md:p-8 border border-border/50 shadow-card"><Button variant="ghost" size="sm" onClick={handleBackToSelector} className="gap-2 -ml-2 mb-4"><ArrowLeft className="w-4 h-4" />Voltar</Button><CVForm onGenerate={handleGeneratePersonalized} isLoading={isLoading} /></motion.div>)}
