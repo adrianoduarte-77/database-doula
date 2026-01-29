@@ -926,7 +926,7 @@ const Portal = () => {
                           whileTap={!blocked ? { scale: 0.99 } : {}}
                           className={`
                             group/card relative p-4 text-left
-                            border border-white/5
+                            rounded-2xl border border-white/5
                             transition-all duration-200
                             ${
                               blocked
