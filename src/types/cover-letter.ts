@@ -3,11 +3,9 @@ export interface CoverLetterFormData {
   idade: string;
   localizacao: string;
   profissao: string;
-  estadoCivil: string;
   interesses: string;
   softSkills: string;
   hardSkills: string;
-  estadoCivil?: string;
   ultimoCargo: string;
   cargosInteresse: string;
   cvAnalysis: string; // CV texto extraído
