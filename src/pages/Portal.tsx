@@ -24,7 +24,7 @@ import {
   Home,
   Menu,
   X,
-  Gift
+  Gift,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -140,16 +140,16 @@ const Portal = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const { isAdmin, isAdminSticky, loading: adminLoading } = useAdmin();
   const { isDev, loading: devLoading } = useDev();
-  
+
   // Effective admin status: either current check or sticky (once admin, always admin in session)
   const effectiveIsAdmin = isAdmin || isAdminSticky;
-  
+
   // Dev users have full access to all stages
   const effectiveIsDev = isDev;
-  
+
   // Cache keys for instant loading
-  const CACHE_KEY_USER = 'portal_user_cache';
-  
+  const CACHE_KEY_USER = "portal_user_cache";
+
   // Try to load cached user data immediately for instant display
   const getCachedUserData = () => {
     try {
@@ -166,9 +166,9 @@ const Portal = () => {
     }
     return null;
   };
-  
+
   const cachedData = user?.id ? getCachedUserData() : null;
-  
+
   const [progress, setProgress] = useState<StageProgress[]>([]);
   // Initialize userName from cache for instant display
   const [userName, setUserName] = useState<string | null>(cachedData?.userName || null);
@@ -180,10 +180,14 @@ const Portal = () => {
   const [savedInterviews, setSavedInterviews] = useState<SavedInterview[]>([]);
   const [platformActivated, setPlatformActivated] = useState<boolean | null>(cachedData?.platformActivated ?? null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [warningModal, setWarningModal] = useState<{ open: boolean; type: 'linkedin-cv' | 'linkedin-gupy'; targetPath: string }>({
+  const [warningModal, setWarningModal] = useState<{
+    open: boolean;
+    type: "linkedin-cv" | "linkedin-gupy";
+    targetPath: string;
+  }>({
     open: false,
-    type: 'linkedin-cv',
-    targetPath: '',
+    type: "linkedin-cv",
+    targetPath: "",
   });
   const [stage2Unlocked, setStage2Unlocked] = useState<boolean>(cachedData?.stage2Unlocked ?? false);
   const [stage2Completed, setStage2Completed] = useState<boolean>(cachedData?.stage2Completed ?? false);
@@ -191,10 +195,8 @@ const Portal = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [hasLearningPath, setHasLearningPath] = useState(cachedData?.hasLearningPath ?? false);
-  const [currentPhrase] = useState(() =>
-    impactPhrases[Math.floor(Math.random() * impactPhrases.length)]
-  );
-  
+  const [currentPhrase] = useState(() => impactPhrases[Math.floor(Math.random() * impactPhrases.length)]);
+
   // Cache still helps populate userName quickly, but UI is blocked until identity + data are confirmed.
 
   // Removed artificial delay timers - content now shows when data is ready
@@ -209,11 +211,14 @@ const Portal = () => {
   }) => {
     if (!user?.id) return;
     try {
-      sessionStorage.setItem(CACHE_KEY_USER, JSON.stringify({
-        userId: user.id,
-        ...data,
-        timestamp: Date.now()
-      }));
+      sessionStorage.setItem(
+        CACHE_KEY_USER,
+        JSON.stringify({
+          userId: user.id,
+          ...data,
+          timestamp: Date.now(),
+        }),
+      );
     } catch {
       // Ignore cache errors
     }
@@ -231,54 +236,46 @@ const Portal = () => {
         setIsIdentityReady(true);
         return;
       }
-      
+
       if (adminLoading || devLoading) return;
 
       // ADMIN or DEV = PORTAL DIRETO, sem nenhuma verificação de ativação ou presente
       if (effectiveIsAdmin || effectiveIsDev) {
-        console.log('[Portal] Admin/Dev detected - bypassing all activation/gift checks');
+        console.log("[Portal] Admin/Dev detected - bypassing all activation/gift checks");
         setPlatformActivated(true);
       }
 
       // Fetch profile and remaining data in parallel for maximum speed
-      const [profileResult, progressResult, diagnosticResult, funnelResult, cvsResult, interviewsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('full_name, platform_activated, stage2_unlocked, stage2_completed, learning_path')
-          .eq('user_id', user.id)
-          .single(),
-        supabase
-          .from('mentoring_progress')
-          .select('stage_number, completed, current_step')
-          .eq('user_id', user.id),
-        supabase
-          .from('linkedin_diagnostics')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'published')
-          .maybeSingle(),
-        supabase
-          .from('opportunity_funnels')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'published')
-          .maybeSingle(),
-        supabase
-          .from('saved_cvs')
-          .select('id, name, cv_data')
-          .eq('user_id', user.id),
-        supabase
-          .from('interview_history')
-          .select('id')
-          .eq('user_id', user.id)
-      ]);
+      const [profileResult, progressResult, diagnosticResult, funnelResult, cvsResult, interviewsResult] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("full_name, platform_activated, stage2_unlocked, stage2_completed, learning_path")
+            .eq("user_id", user.id)
+            .single(),
+          supabase.from("mentoring_progress").select("stage_number, completed, current_step").eq("user_id", user.id),
+          supabase
+            .from("linkedin_diagnostics")
+            .select("status")
+            .eq("user_id", user.id)
+            .eq("status", "published")
+            .maybeSingle(),
+          supabase
+            .from("opportunity_funnels")
+            .select("status")
+            .eq("user_id", user.id)
+            .eq("status", "published")
+            .maybeSingle(),
+          supabase.from("saved_cvs").select("id, name, cv_data").eq("user_id", user.id),
+          supabase.from("interview_history").select("id").eq("user_id", user.id),
+        ]);
 
       const profile = profileResult.data;
       const profileError = profileResult.error;
 
       // If profile fetch fails, don't redirect - just show loading or error
       if (profileError) {
-        console.error('[Portal] Error fetching profile:', profileError);
+        console.error("[Portal] Error fetching profile:", profileError);
         // For admin/dev, just continue - they don't need activation
         if (effectiveIsAdmin || effectiveIsDev) {
           // Admin/Dev can continue even without profile
@@ -292,11 +289,11 @@ const Portal = () => {
 
       const fallbackName = (() => {
         const metaName = (user.user_metadata as any)?.full_name as string | undefined;
-        const fromMeta = metaName?.trim() ? metaName.trim().split(' ')[0] : null;
+        const fromMeta = metaName?.trim() ? metaName.trim().split(" ")[0] : null;
         if (fromMeta) return fromMeta;
 
         const email = user.email?.trim();
-        if (email) return email.split('@')[0] || null;
+        if (email) return email.split("@")[0] || null;
         return null;
       })();
 
@@ -306,13 +303,13 @@ const Portal = () => {
         const s2Unlocked = profile.stage2_unlocked ?? false;
         const s2Completed = profile.stage2_completed ?? false;
         const hasPath = !!profile.learning_path;
-        
+
         setStage2Unlocked(s2Unlocked);
         setStage2Completed(s2Completed);
         setHasLearningPath(hasPath);
-        
+
         if (profile.full_name?.trim()) {
-          extractedUserName = profile.full_name.trim().split(' ')[0];
+          extractedUserName = profile.full_name.trim().split(" ")[0];
         }
 
         // Always set a non-null name when possible (prevents greeting race/blank)
@@ -324,7 +321,7 @@ const Portal = () => {
           platformActivated: profile.platform_activated ?? false,
           stage2Unlocked: s2Unlocked,
           stage2Completed: s2Completed,
-          hasLearningPath: hasPath
+          hasLearningPath: hasPath,
         });
       }
 
@@ -334,8 +331,8 @@ const Portal = () => {
         setPlatformActivated(activated);
 
         if (!activated) {
-          console.log('[Portal] Non-admin/dev not activated, redirecting to /ativar');
-          window.location.href = '/ativar';
+          console.log("[Portal] Non-admin/dev not activated, redirecting to /ativar");
+          window.location.href = "/ativar";
           return;
         }
 
@@ -384,12 +381,12 @@ const Portal = () => {
     return isDataReady && isIdentityReady && hasName;
   })();
 
-  const hasPersonalizedCV = savedCVs.some(cv => {
+  const hasPersonalizedCV = savedCVs.some((cv) => {
     const data = cv.cv_data as any;
     return data?.sumario && !data?.isATS;
   });
 
-  const hasATSCV = savedCVs.some(cv => {
+  const hasATSCV = savedCVs.some((cv) => {
     const data = cv.cv_data as any;
     return data?.isATS === true;
   });
@@ -398,18 +395,18 @@ const Portal = () => {
 
   const getStageStatus = (stageNumber: number) => {
     // Check mentoring_progress for completed status first
-    const stageProgress = progress.find(p => p.stage_number === stageNumber);
-    if (stageProgress?.completed) return 'completed';
+    const stageProgress = progress.find((p) => p.stage_number === stageNumber);
+    if (stageProgress?.completed) return "completed";
 
     if (stageNumber === 1) {
-      return linkedinDiagnostic?.status === 'published' ? 'available' : 'pending';
+      return linkedinDiagnostic?.status === "published" ? "available" : "pending";
     }
     if (stageNumber === 3) {
-      return opportunityFunnel?.status === 'published' ? 'available' : 'pending';
+      return opportunityFunnel?.status === "published" ? "available" : "pending";
     }
 
-    if (stageProgress) return 'in_progress';
-    return 'not_started';
+    if (stageProgress) return "in_progress";
+    return "not_started";
   };
 
   const isStageBlocked = (stageNumber: number) => {
@@ -418,7 +415,7 @@ const Portal = () => {
     if (effectiveIsAdmin || effectiveIsDev) {
       // Original logic for admin/dev
       if (stageNumber === 1) {
-        return linkedinDiagnostic?.status !== 'published';
+        return linkedinDiagnostic?.status !== "published";
       }
       if (stageNumber === 2) {
         return !stage2Unlocked;
@@ -431,7 +428,7 @@ const Portal = () => {
       }
       return false;
     }
-    
+
     // TEMPORARY: For regular users, block stages 1, 3, 4, 5, 6, 7
     if ([1, 3, 4, 5, 6, 7].includes(stageNumber)) {
       return true;
@@ -445,15 +442,15 @@ const Portal = () => {
     return false;
   };
 
-  const getStageWarning = (stageNumber: number): 'linkedin-cv' | 'linkedin-gupy' | null => {
-    if (stageNumber === 2) return 'linkedin-cv';
-    if (stageNumber === 6) return 'linkedin-gupy';
+  const getStageWarning = (stageNumber: number): "linkedin-cv" | "linkedin-gupy" | null => {
+    if (stageNumber === 2) return "linkedin-cv";
+    if (stageNumber === 6) return "linkedin-gupy";
     return null;
   };
 
-  const handleStageClick = (stage: typeof stages[0]) => {
+  const handleStageClick = (stage: (typeof stages)[0]) => {
     if (!user) {
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
 
@@ -474,7 +471,7 @@ const Portal = () => {
 
     if (stage.number === 3) {
       // Stage 3 is unlocked but funnel may not be ready yet
-      if (opportunityFunnel?.status === 'published') {
+      if (opportunityFunnel?.status === "published") {
         navigate(stage.path);
       } else {
         // Show modal explaining funnel is being prepared
@@ -487,8 +484,8 @@ const Portal = () => {
   };
 
   const handleStage3Continue = () => {
-    if (opportunityFunnel?.status === 'published') {
-      navigate('/etapa/3');
+    if (opportunityFunnel?.status === "published") {
+      navigate("/etapa/3");
     }
   };
 
@@ -507,24 +504,53 @@ const Portal = () => {
 
   const handleLogoutComplete = async () => {
     await signOut();
-    navigate('/auth');
+    navigate("/auth");
   };
 
   const sidebarLinks = [
-    { icon: Home, label: 'Início', onClick: () => {}, active: true },
-    { icon: Gift, label: 'Minha Trilha', onClick: () => { if (hasLearningPath) navigate('/presente', { state: { direct: true } }); }, highlight: true },
-    { icon: HelpCircle, label: 'Suporte', onClick: () => { window.location.href = '/suporte'; } },
-    { icon: Settings, label: 'Configurações', onClick: () => { window.location.href = '/configuracoes'; } },
+    { icon: Home, label: "Início", onClick: () => {}, active: true },
+    {
+      icon: Gift,
+      label: "Minha Trilha",
+      onClick: () => {
+        if (hasLearningPath) navigate("/presente", { state: { direct: true } });
+      },
+      highlight: true,
+    },
+    {
+      icon: HelpCircle,
+      label: "Suporte",
+      onClick: () => {
+        window.location.href = "/suporte";
+      },
+    },
+    {
+      icon: Settings,
+      label: "Configurações",
+      onClick: () => {
+        window.location.href = "/configuracoes";
+      },
+    },
     { divider: true },
-    { icon: Instagram, label: 'Instagram', onClick: () => window.open('https://www.instagram.com/oduarteeoficial/', '_blank'), external: true },
-    { icon: Linkedin, label: 'LinkedIn', onClick: () => window.open('https://www.linkedin.com/in/oduarteoficial/', '_blank'), external: true },
+    {
+      icon: Instagram,
+      label: "Instagram",
+      onClick: () => window.open("https://www.instagram.com/oduarteeoficial/", "_blank"),
+      external: true,
+    },
+    {
+      icon: Linkedin,
+      label: "LinkedIn",
+      onClick: () => window.open("https://www.linkedin.com/in/oduarteoficial/", "_blank"),
+      external: true,
+    },
   ];
 
   // HARD render gate: show nothing except the loading screen until the portal is fully ready.
   if (!renderGateReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div 
+        <motion.div
           className="flex flex-col items-center gap-4"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -532,17 +558,17 @@ const Portal = () => {
         >
           <img src={logoAD} alt="AD" className="w-16 h-16 rounded-xl" />
           <div className="flex items-center gap-2">
-            <motion.div 
+            <motion.div
               className="w-2 h-2 rounded-full bg-primary"
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 0.8, repeat: Infinity, delay: 0 }}
             />
-            <motion.div 
+            <motion.div
               className="w-2 h-2 rounded-full bg-primary"
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }}
             />
-            <motion.div 
+            <motion.div
               className="w-2 h-2 rounded-full bg-primary"
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }}
@@ -556,7 +582,7 @@ const Portal = () => {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
-      <motion.aside 
+      <motion.aside
         className="hidden lg:flex flex-col w-20 hover:w-64 transition-all duration-300 group bg-card/50 backdrop-blur-xl border-r border-border/50 fixed left-0 top-0 bottom-0 z-50"
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -570,10 +596,10 @@ const Portal = () => {
         {/* Navigation Links */}
         <nav className="flex-1 py-6 px-3 space-y-2">
           {sidebarLinks.map((link, index) => {
-            if ('divider' in link) {
+            if ("divider" in link) {
               return <div key={index} className="h-px bg-border/30 my-4" />;
             }
-            
+
             const Icon = link.icon;
             return (
               <motion.button
@@ -583,11 +609,12 @@ const Portal = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`
                   w-full flex items-center gap-3 p-3 rounded-xl transition-all border
-                  ${'highlight' in link && link.highlight
-                    ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30'
-                    : link.active 
-                      ? 'bg-primary/15 text-primary border-primary/30' 
-                      : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground border-transparent'
+                  ${
+                    "highlight" in link && link.highlight
+                      ? "bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30"
+                      : link.active
+                        ? "bg-primary/15 text-primary border-primary/30"
+                        : "text-muted-foreground hover:bg-primary/10 hover:text-foreground border-transparent"
                   }
                 `}
               >
@@ -611,8 +638,8 @@ const Portal = () => {
                 <User className="w-5 h-5 text-primary" />
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
-                <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
-                <button 
+                <p className="text-sm font-medium text-foreground truncate">{userName || "Usuário"}</p>
+                <button
                   onClick={handleLogout}
                   className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                 >
@@ -624,7 +651,9 @@ const Portal = () => {
         ) : (
           <div className="p-4 border-t border-border/30">
             <button
-              onClick={() => { window.location.href = '/auth'; }}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all"
             >
               <LogIn className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -641,7 +670,7 @@ const Portal = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate("/admin")}
               className="w-full gap-2 border-primary/30 hover:bg-primary/10 rounded-xl"
             >
               <Shield className="w-4 h-4" />
@@ -681,10 +710,10 @@ const Portal = () => {
 
               <nav className="flex-1 py-6 px-4 space-y-2">
                 {sidebarLinks.map((link, index) => {
-                  if ('divider' in link) {
+                  if ("divider" in link) {
                     return <div key={index} className="h-px bg-border/30 my-4" />;
                   }
-                  
+
                   const Icon = link.icon;
                   return (
                     <button
@@ -695,9 +724,10 @@ const Portal = () => {
                       }}
                       className={`
                         w-full flex items-center gap-3 p-3 rounded-xl transition-all
-                        ${link.active 
-                          ? 'bg-primary/15 text-primary' 
-                          : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                        ${
+                          link.active
+                            ? "bg-primary/15 text-primary"
+                            : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                         }
                       `}
                     >
@@ -716,7 +746,7 @@ const Portal = () => {
                       <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{userName || 'Usuário'}</p>
+                      <p className="text-sm font-medium">{userName || "Usuário"}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
@@ -726,8 +756,10 @@ const Portal = () => {
                 </div>
               ) : (
                 <div className="p-4 border-t border-border/30">
-                  <button 
-                    onClick={() => { window.location.href = '/auth'; }}
+                  <button
+                    onClick={() => {
+                      window.location.href = "/auth";
+                    }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all"
                   >
                     <LogIn className="w-5 h-5 text-muted-foreground" />
@@ -741,7 +773,10 @@ const Portal = () => {
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => { navigate('/admin'); setSidebarOpen(false); }}
+                    onClick={() => {
+                      navigate("/admin");
+                      setSidebarOpen(false);
+                    }}
                     className="w-full gap-2"
                   >
                     <Shield className="w-4 h-4" /> Painel Admin
@@ -766,7 +801,13 @@ const Portal = () => {
               <User className="w-5 h-5 text-primary" />
             </div>
           ) : (
-            <Button variant="ghost" size="icon" onClick={() => { window.location.href = '/auth'; }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
+            >
               <LogIn className="w-5 h-5" />
             </Button>
           )}
@@ -777,25 +818,29 @@ const Portal = () => {
           {/* Background Decorative Elements */}
           <div className="hidden lg:block absolute inset-0 overflow-hidden pointer-events-none">
             {/* Glowing orbs */}
-            <motion.div 
+            <motion.div
               className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
-              animate={{ 
+              animate={{
                 scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3] 
+                opacity: [0.3, 0.5, 0.3],
               }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.div 
+            <motion.div
               className="absolute bottom-1/3 right-1/3 w-64 h-64 bg-accent/5 rounded-full blur-3xl"
-              animate={{ 
+              animate={{
                 scale: [1.2, 1, 1.2],
-                opacity: [0.2, 0.4, 0.2] 
+                opacity: [0.2, 0.4, 0.2],
               }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             />
-            
+
             {/* Geometric lines */}
-            <svg className="absolute top-0 right-0 w-full h-full opacity-[0.03]" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <svg
+              className="absolute top-0 right-0 w-full h-full opacity-[0.03]"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
               <line x1="60" y1="0" x2="100" y2="40" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
               <line x1="70" y1="0" x2="100" y2="30" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
               <line x1="80" y1="0" x2="100" y2="20" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
@@ -805,7 +850,7 @@ const Portal = () => {
           </div>
 
           {/* Mentor Section - Now on Left (Background) */}
-          <motion.div 
+          <motion.div
             className="hidden lg:block w-[45%] xl:w-[40%] relative"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -820,7 +865,6 @@ const Portal = () => {
               {/* Gradient overlays */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background" />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
-              
             </div>
           </motion.div>
 
@@ -840,7 +884,7 @@ const Portal = () => {
                   </div>
 
                   {user && userName && (
-                    <motion.h1 
+                    <motion.h1
                       className="text-3xl lg:text-4xl xl:text-5xl font-display font-bold mb-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -850,9 +894,7 @@ const Portal = () => {
                     </motion.h1>
                   )}
 
-                  <p className="text-lg text-muted-foreground max-w-xl">
-                    {currentPhrase}
-                  </p>
+                  <p className="text-lg text-muted-foreground max-w-xl">{currentPhrase}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -864,16 +906,14 @@ const Portal = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
                 >
-                  <h2 className="text-xl font-display font-bold text-foreground mb-6">
-                    Suas Etapas
-                  </h2>
+                  <h2 className="text-xl font-display font-bold text-foreground mb-6">Suas Etapas</h2>
 
                   <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                     {stages.map((stage, index) => {
                       const status = getStageStatus(stage.number);
                       const blocked = isStageBlocked(stage.number);
                       const Icon = stage.icon;
-                      const isCompleted = status === 'completed';
+                      const isCompleted = status === "completed";
 
                       return (
                         <motion.button
@@ -885,39 +925,40 @@ const Portal = () => {
                           whileHover={!blocked ? { scale: 1.01 } : {}}
                           whileTap={!blocked ? { scale: 0.99 } : {}}
                           className={`
-                            group/card relative p-4 rounded-xl text-left
-                            bg-card/60 backdrop-blur-sm
-                            transition-all duration-200
-                            ${blocked
-                              ? 'opacity-40 cursor-not-allowed'
-                              : 'cursor-pointer hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5'
+                         group/card relative p-4 text-left
+                         transition-all duration-200
+                            ${
+                              blocked
+                                ? "opacity-40 cursor-not-allowed"
+                                : "cursor-pointer hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5"
                             }
-                            ${isCompleted ? 'bg-primary/5' : ''}
+                            ${isCompleted ? "bg-primary/5" : ""}
                           `}
                           disabled={blocked}
                         >
                           <div className="flex items-center gap-3">
                             {/* Number Badge */}
-                            <div className={`
+                            <div
+                              className={`
                               w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-sm
                               transition-colors
-                              ${isCompleted 
-                                ? 'bg-primary/20 text-primary' 
-                                : blocked 
-                                  ? 'bg-muted/30 text-muted-foreground/50'
-                                  : 'bg-primary/10 text-primary group-hover/card:bg-primary/20'
+                              ${
+                                isCompleted
+                                  ? "bg-primary/20 text-primary"
+                                  : blocked
+                                    ? "bg-muted/30 text-muted-foreground/50"
+                                    : "bg-primary/10 text-primary group-hover/card:bg-primary/20"
                               }
-                            `}>
-                              {isCompleted ? (
-                                <Check className="w-4 h-4" strokeWidth={3} />
-                              ) : (
-                                stage.number
-                              )}
+                            `}
+                            >
+                              {isCompleted ? <Check className="w-4 h-4" strokeWidth={3} /> : stage.number}
                             </div>
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <h3 className={`text-sm font-medium ${blocked ? 'text-muted-foreground/50' : 'text-foreground'}`}>
+                              <h3
+                                className={`text-sm font-medium ${blocked ? "text-muted-foreground/50" : "text-foreground"}`}
+                              >
                                 {stage.title}
                               </h3>
                               <p className="text-xs text-muted-foreground/70 line-clamp-1 mt-0.5">
@@ -962,13 +1003,13 @@ const Portal = () => {
                     </div>
                     <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
                       <p className="text-2xl font-display font-bold text-accent">
-                        {progress.filter(p => p.completed).length}
+                        {progress.filter((p) => p.completed).length}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Concluídas</p>
                     </div>
                     <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
                       <p className="text-2xl font-display font-bold text-foreground">
-                        {Math.round((progress.filter(p => p.completed).length / stages.length) * 100)}%
+                        {Math.round((progress.filter((p) => p.completed).length / stages.length) * 100)}%
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Progresso</p>
                     </div>
@@ -981,10 +1022,7 @@ const Portal = () => {
       </div>
 
       {/* Modals */}
-      <WelcomeMentorModal
-        open={showWelcomeModal}
-        onComplete={handleWelcomeComplete}
-      />
+      <WelcomeMentorModal open={showWelcomeModal} onComplete={handleWelcomeComplete} />
 
       <StageWarningModal
         open={warningModal.open}
@@ -996,14 +1034,11 @@ const Portal = () => {
       <Stage3WelcomeModal
         open={showStage3Modal}
         onOpenChange={setShowStage3Modal}
-        hasFunnel={opportunityFunnel?.status === 'published'}
+        hasFunnel={opportunityFunnel?.status === "published"}
         onContinue={handleStage3Continue}
       />
 
-      <LogoutModal
-        open={showLogoutModal}
-        onComplete={handleLogoutComplete}
-      />
+      <LogoutModal open={showLogoutModal} onComplete={handleLogoutComplete} />
     </div>
   );
 };
