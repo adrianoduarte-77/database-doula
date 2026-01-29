@@ -925,8 +925,9 @@ const Portal = () => {
                           whileHover={!blocked ? { scale: 1.01 } : {}}
                           whileTap={!blocked ? { scale: 0.99 } : {}}
                           className={`
-                         group/card relative p-4 text-left
-                         transition-all duration-200
+                            group/card relative p-4 text-left
+                            border border-white/5
+                            transition-all duration-200
                             ${
                               blocked
                                 ? "opacity-40 cursor-not-allowed"
