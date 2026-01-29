@@ -221,17 +221,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
     onGenerate(formData);
   };
 
-  const isFormValid =
-    formData.nome.trim() &&
-    formData.idade.trim() &&
-    formData.localizacao.trim() &&
-    formData.profissao.trim() &&
-    formData.interesses.trim() &&
-    formData.softSkills.trim() &&
-    formData.hardSkills.trim() &&
-    formData.ultimoCargo.trim() &&
-    formData.cargosInteresse.trim() &&
-    formData.cvAnalysis.trim();
+  const isFormValid = formData.nome && formData.profissao && formData.cvAnalysis;
   const isStep1Valid = formData.nome.trim().length > 0;
 
   // Show loading while profile is being fetched
@@ -318,16 +308,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                       className={personalData.age ? `${mobileInputClass} opacity-70` : mobileInputClass}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Estado Civil</label>
-                    <input
-                      type="text"
-                      value={formData.estadoCivil}
-                      onChange={(e) => handleChange("estadoCivil", e.target.value)}
-                      placeholder="Solteiro(a)"
-                      className={mobileInputClass}
-                    />
-                  </div>
+                  <div className="space-y-2"></div>
                 </div>
 
                 <div className="space-y-2">
@@ -515,7 +496,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                 </Button>
                 {!isFormValid && (
                   <p className="text-xs text-muted-foreground text-center mt-3">
-                    Preencha todos os campos obrigatórios
+                    Preencha Nome, Profissão e anexe seu CV
                   </p>
                 )}
               </div>
@@ -560,14 +541,6 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
             placeholder="Ex: 28 anos"
             readOnly={!!personalData.age}
             className={personalData.age ? "opacity-70" : undefined}
-          />
-        </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-          <label className="text-sm font-medium mb-2 block">Estado Civil</label>
-          <Input
-            value={formData.estadoCivil}
-            onChange={(e) => handleChange("estadoCivil", e.target.value)}
-            placeholder="Ex: Solteiro(a)"
           />
         </motion.div>
       </div>
