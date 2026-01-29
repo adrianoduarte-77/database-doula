@@ -2,7 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, FileText, Sparkles, Loader2, Info, Lock, CheckCircle2, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Sparkles,
+  Loader2,
+  Info,
+  Lock,
+  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+  ChevronRight,
+} from "lucide-react";
 import { CoverLetterFormData } from "@/types/cover-letter";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,13 +53,13 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
 
   // Scroll to top when advancing steps
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Auto-fill personal data from profile
   useEffect(() => {
     if (!isLoadingProfile && personalData) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         nome: prev.nome || personalData.fullName,
         idade: prev.idade || personalData.age,
@@ -58,11 +69,11 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
   }, [personalData, isLoadingProfile]);
 
   const handleChange = (field: keyof CoverLetterFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const processFile = async (file: File) => {
-    if (file.type !== 'application/pdf') {
+    if (file.type !== "application/pdf") {
       toast({
         title: "Formato inválido",
         description: "Por favor, envie um arquivo PDF.",
@@ -83,54 +94,54 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
 
     setExtractingCV(true);
     setUploadedFileName(file.name);
-    
+
     toast({
       title: "Processando CV...",
       description: "Isso pode levar até 2 minutos dependendo do tamanho do arquivo.",
     });
-    
+
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const base64 = (reader.result as string).split(',')[1];
-        
+        const base64 = (reader.result as string).split(",")[1];
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 180000);
-        
-        const { data, error } = await supabase.functions.invoke('extract-cv-pdf', {
-          body: { pdfBase64: base64 }
+
+        const { data, error } = await supabase.functions.invoke("extract-cv-pdf", {
+          body: { pdfBase64: base64 },
         });
-        
+
         clearTimeout(timeoutId);
 
         if (error) {
-          if (error.message?.includes('connection') || error.message?.includes('timeout')) {
-            throw new Error('A extração demorou muito. Tente com um PDF menor ou mais simples.');
+          if (error.message?.includes("connection") || error.message?.includes("timeout")) {
+            throw new Error("A extração demorou muito. Tente com um PDF menor ou mais simples.");
           }
           throw error;
         }
         if (data?.error) throw new Error(data.error);
 
         const cvText = formatExtractedCV(data);
-        handleChange('cvAnalysis', cvText);
-        
+        handleChange("cvAnalysis", cvText);
+
         toast({
           title: "CV extraído! ✓",
           description: "Os dados do currículo foram extraídos com sucesso.",
         });
       } catch (error: any) {
-        console.error('Error extracting CV:', error);
+        console.error("Error extracting CV:", error);
         setUploadedFileName(null);
-        
+
         let errorMessage = "Tente novamente.";
-        if (error.message?.includes('timeout') || error.message?.includes('demorou')) {
+        if (error.message?.includes("timeout") || error.message?.includes("demorou")) {
           errorMessage = "A extração demorou muito. Tente com um PDF menor.";
-        } else if (error.message?.includes('connection')) {
+        } else if (error.message?.includes("connection")) {
           errorMessage = "Conexão perdida. Verifique sua internet e tente novamente.";
         } else if (error.message) {
           errorMessage = error.message;
         }
-        
+
         toast({
           title: "Erro ao extrair CV",
           description: errorMessage,
@@ -174,7 +185,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file) {
       await processFile(file);
@@ -183,10 +194,10 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
 
   const formatExtractedCV = (data: any): string => {
     let text = "";
-    
-    const experiencias = typeof data.experiencias === 'string' ? data.experiencias.trim() : '';
-    const educacao = typeof data.educacao === 'string' ? data.educacao.trim() : '';
-    
+
+    const experiencias = typeof data.experiencias === "string" ? data.experiencias.trim() : "";
+    const educacao = typeof data.educacao === "string" ? data.educacao.trim() : "";
+
     if (experiencias) {
       text += "EXPERIÊNCIAS PROFISSIONAIS:\n" + experiencias;
     }
@@ -224,7 +235,8 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
   }
 
   // Mobile input classes - matches ATS CV pattern
-  const mobileInputClass = "w-full h-12 px-4 rounded-xl bg-muted/20 border-transparent text-base text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200";
+  const mobileInputClass =
+    "w-full h-12 px-4 rounded-xl bg-muted/20 border-transparent text-base text-foreground placeholder:text-muted-foreground/40 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200";
 
   // Mobile Layout - 2 Steps (matches ATS CV and Custom CV)
   if (isMobile) {
@@ -236,17 +248,22 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
             type="button"
             variant="ghost"
             size="sm"
-            onClick={mobileStep === 1 ? onBack : () => { setMobileStep(1); scrollToTop(); }}
+            onClick={
+              mobileStep === 1
+                ? onBack
+                : () => {
+                    setMobileStep(1);
+                    scrollToTop();
+                  }
+            }
             className="gap-1.5 text-sm text-muted-foreground hover:text-foreground h-9 -ml-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            {mobileStep === 1 ? 'Voltar' : 'Anterior'}
+            {mobileStep === 1 ? "Voltar" : "Anterior"}
           </Button>
-          
+
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-primary">
-              Etapa {mobileStep} de 2
-            </span>
+            <span className="text-xs font-medium text-primary">Etapa {mobileStep} de 2</span>
           </div>
         </div>
 
@@ -272,20 +289,20 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <input
                     type="text"
                     value={formData.nome}
-                    onChange={(e) => handleChange('nome', e.target.value)}
+                    onChange={(e) => handleChange("nome", e.target.value)}
                     placeholder="Seu nome completo"
                     readOnly={!!personalData.fullName}
                     className={personalData.fullName ? `${mobileInputClass} opacity-70` : mobileInputClass}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Idade</label>
                     <input
                       type="text"
                       value={formData.idade}
-                      onChange={(e) => handleChange('idade', e.target.value)}
+                      onChange={(e) => handleChange("idade", e.target.value)}
                       placeholder="Ex: 28 anos"
                       readOnly={!!personalData.age}
                       className={personalData.age ? `${mobileInputClass} opacity-70` : mobileInputClass}
@@ -296,7 +313,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                     <input
                       type="text"
                       value={formData.estadoCivil}
-                      onChange={(e) => handleChange('estadoCivil', e.target.value)}
+                      onChange={(e) => handleChange("estadoCivil", e.target.value)}
                       placeholder="Solteiro(a)"
                       className={mobileInputClass}
                     />
@@ -308,7 +325,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <input
                     type="text"
                     value={formData.localizacao}
-                    onChange={(e) => handleChange('localizacao', e.target.value)}
+                    onChange={(e) => handleChange("localizacao", e.target.value)}
                     placeholder="Cidade, Estado"
                     readOnly={!!personalData.location}
                     className={personalData.location ? `${mobileInputClass} opacity-70` : mobileInputClass}
@@ -320,19 +337,19 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <input
                     type="text"
                     value={formData.profissao}
-                    onChange={(e) => handleChange('profissao', e.target.value)}
+                    onChange={(e) => handleChange("profissao", e.target.value)}
                     placeholder="Sua área de atuação"
                     className={mobileInputClass}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Último Cargo</label>
                     <input
                       type="text"
                       value={formData.ultimoCargo}
-                      onChange={(e) => handleChange('ultimoCargo', e.target.value)}
+                      onChange={(e) => handleChange("ultimoCargo", e.target.value)}
                       placeholder="Cargo atual"
                       className={mobileInputClass}
                     />
@@ -342,7 +359,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                     <input
                       type="text"
                       value={formData.cargosInteresse}
-                      onChange={(e) => handleChange('cargosInteresse', e.target.value)}
+                      onChange={(e) => handleChange("cargosInteresse", e.target.value)}
                       placeholder="Cargo desejado"
                       className={mobileInputClass}
                     />
@@ -353,7 +370,10 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
               <div className="pt-6">
                 <Button
                   type="button"
-                  onClick={() => { setMobileStep(2); scrollToTop(); }}
+                  onClick={() => {
+                    setMobileStep(2);
+                    scrollToTop();
+                  }}
                   disabled={!isStep1Valid}
                   className="w-full gap-2 h-14 text-base font-medium rounded-2xl"
                 >
@@ -385,7 +405,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <label className="text-sm text-muted-foreground">Soft Skills</label>
                   <Textarea
                     value={formData.softSkills}
-                    onChange={(e) => handleChange('softSkills', e.target.value)}
+                    onChange={(e) => handleChange("softSkills", e.target.value)}
                     placeholder="Ex: Comunicação, Liderança, Resolução de problemas..."
                     className="min-h-[80px] bg-muted/20 border-transparent rounded-xl text-base"
                   />
@@ -395,7 +415,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <label className="text-sm text-muted-foreground">Hard Skills</label>
                   <Textarea
                     value={formData.hardSkills}
-                    onChange={(e) => handleChange('hardSkills', e.target.value)}
+                    onChange={(e) => handleChange("hardSkills", e.target.value)}
                     placeholder="Ex: Excel avançado, SAP, Python, Scrum..."
                     className="min-h-[80px] bg-muted/20 border-transparent rounded-xl text-base"
                   />
@@ -405,7 +425,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <label className="text-sm text-muted-foreground">Interesses Profissionais</label>
                   <Textarea
                     value={formData.interesses}
-                    onChange={(e) => handleChange('interesses', e.target.value)}
+                    onChange={(e) => handleChange("interesses", e.target.value)}
                     placeholder="Áreas, setores ou tipos de projetos que te interessam..."
                     className="min-h-[80px] bg-muted/20 border-transparent rounded-xl text-base"
                   />
@@ -419,13 +439,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <label className="text-base font-medium text-foreground">Anexar CV ATS *</label>
                 </div>
 
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept=".pdf"
-                  className="hidden"
-                />
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf" className="hidden" />
 
                 {!formData.cvAnalysis && !extractingCV ? (
                   <div
@@ -436,9 +450,10 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                     className={`
                       relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center
                       transition-all duration-200 ease-out
-                      ${isDragging 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30'
+                      ${
+                        isDragging
+                          ? "border-primary bg-primary/5"
+                          : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30"
                       }
                     `}
                   >
@@ -506,7 +521,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
     <div className="space-y-6 py-4">
       {/* Row 1: Nome e Idade */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <motion.div 
+        <motion.div
           className="col-span-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -518,38 +533,30 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
           </label>
           <Input
             value={formData.nome}
-            onChange={(e) => handleChange('nome', e.target.value)}
+            onChange={(e) => handleChange("nome", e.target.value)}
             placeholder="Seu nome completo"
             readOnly={!!personalData.fullName}
             className={personalData.fullName ? "opacity-70" : undefined}
           />
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
           <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
             Idade
             {formData.idade && personalData.age && <Lock className="w-3 h-3 text-muted-foreground/60" />}
           </label>
           <Input
             value={formData.idade}
-            onChange={(e) => handleChange('idade', e.target.value)}
+            onChange={(e) => handleChange("idade", e.target.value)}
             placeholder="Ex: 28 anos"
             readOnly={!!personalData.age}
             className={personalData.age ? "opacity-70" : undefined}
           />
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
           <label className="text-sm font-medium mb-2 block">Estado Civil</label>
           <Input
             value={formData.estadoCivil}
-            onChange={(e) => handleChange('estadoCivil', e.target.value)}
+            onChange={(e) => handleChange("estadoCivil", e.target.value)}
             placeholder="Ex: Solteiro(a)"
           />
         </motion.div>
@@ -557,32 +564,24 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
 
       {/* Row 2: Localização e Profissão */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
           <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
             Localização
             {formData.localizacao && personalData.location && <Lock className="w-3 h-3 text-muted-foreground/60" />}
           </label>
           <Input
             value={formData.localizacao}
-            onChange={(e) => handleChange('localizacao', e.target.value)}
+            onChange={(e) => handleChange("localizacao", e.target.value)}
             placeholder="Cidade, Estado"
             readOnly={!!personalData.location}
             className={personalData.location ? "opacity-70" : undefined}
           />
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
           <label className="text-sm font-medium mb-2 block">Profissão *</label>
           <Input
             value={formData.profissao}
-            onChange={(e) => handleChange('profissao', e.target.value)}
+            onChange={(e) => handleChange("profissao", e.target.value)}
             placeholder="Sua área de atuação"
           />
         </motion.div>
@@ -594,7 +593,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
           <label className="text-sm font-medium mb-2 block">Seu Último Cargo</label>
           <Input
             value={formData.ultimoCargo}
-            onChange={(e) => handleChange('ultimoCargo', e.target.value)}
+            onChange={(e) => handleChange("ultimoCargo", e.target.value)}
             placeholder="Cargo atual ou mais recente"
           />
         </div>
@@ -602,7 +601,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
           <label className="text-sm font-medium mb-2 block">Cargos de Interesse</label>
           <Input
             value={formData.cargosInteresse}
-            onChange={(e) => handleChange('cargosInteresse', e.target.value)}
+            onChange={(e) => handleChange("cargosInteresse", e.target.value)}
             placeholder="Cargos que você busca"
           />
         </div>
@@ -619,14 +618,16 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs">Habilidades comportamentais: comunicação, liderança, trabalho em equipe, adaptabilidade, etc.</p>
+                  <p className="text-xs">
+                    Habilidades comportamentais: comunicação, liderança, trabalho em equipe, adaptabilidade, etc.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
           <Textarea
             value={formData.softSkills}
-            onChange={(e) => handleChange('softSkills', e.target.value)}
+            onChange={(e) => handleChange("softSkills", e.target.value)}
             placeholder="Ex: Comunicação, Liderança, Resolução de problemas..."
             className="min-h-[60px]"
           />
@@ -640,14 +641,16 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                   <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs">Habilidades técnicas: ferramentas, sistemas, metodologias, certificações, etc.</p>
+                  <p className="text-xs">
+                    Habilidades técnicas: ferramentas, sistemas, metodologias, certificações, etc.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
           <Textarea
             value={formData.hardSkills}
-            onChange={(e) => handleChange('hardSkills', e.target.value)}
+            onChange={(e) => handleChange("hardSkills", e.target.value)}
             placeholder="Ex: Excel avançado, SAP, Python, Scrum..."
             className="min-h-[60px]"
           />
@@ -659,7 +662,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
         <label className="text-sm font-medium mb-2 block">Interesses Profissionais</label>
         <Textarea
           value={formData.interesses}
-          onChange={(e) => handleChange('interesses', e.target.value)}
+          onChange={(e) => handleChange("interesses", e.target.value)}
           placeholder="Áreas, setores ou tipos de projetos que te interessam..."
           className="min-h-[60px]"
         />
@@ -668,18 +671,11 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
       {/* Row 6: CV Upload */}
       <div className="space-y-2">
         <label className="text-sm font-medium flex items-center gap-2">
-          Análise do Currículo *
-          <span className="text-xs text-muted-foreground font-normal">(Anexe seu CV ATS)</span>
+          Análise do Currículo *<span className="text-xs text-muted-foreground font-normal">(Anexe seu CV ATS)</span>
         </label>
-        
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          accept=".pdf"
-          className="hidden"
-        />
-        
+
+        <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf" className="hidden" />
+
         {!formData.cvAnalysis && !extractingCV ? (
           <div
             onClick={() => fileInputRef.current?.click()}
@@ -689,26 +685,29 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
             className={`
               relative cursor-pointer rounded-xl border-2 border-dashed 
               transition-all duration-200 ease-out
-              ${isDragging 
-                ? 'border-primary bg-primary/5 scale-[1.01]' 
-                : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30'
+              ${
+                isDragging
+                  ? "border-primary bg-primary/5 scale-[1.01]"
+                  : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30"
               }
             `}
           >
             <div className="flex flex-col items-center justify-center py-8 px-4 gap-3">
-              <div className={`
+              <div
+                className={`
                 p-3 rounded-full transition-colors duration-200
-                ${isDragging ? 'bg-primary/20' : 'bg-muted'}
-              `}>
-                <Upload className={`w-6 h-6 transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                ${isDragging ? "bg-primary/20" : "bg-muted"}
+              `}
+              >
+                <Upload
+                  className={`w-6 h-6 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`}
+                />
               </div>
               <div className="text-center space-y-1">
                 <p className="text-sm font-medium">
-                  {isDragging ? 'Solte o arquivo aqui' : 'Arraste seu CV aqui ou clique para selecionar'}
+                  {isDragging ? "Solte o arquivo aqui" : "Arraste seu CV aqui ou clique para selecionar"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Apenas PDF • Máximo 5MB
-                </p>
+                <p className="text-xs text-muted-foreground">Apenas PDF • Máximo 5MB</p>
               </div>
             </div>
           </div>
@@ -735,11 +734,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
             Cancelar
           </Button>
         )}
-        <Button
-          onClick={handleSubmit}
-          disabled={!isFormValid || isLoading || extractingCV}
-          className="gap-2"
-        >
+        <Button onClick={handleSubmit} disabled={!isFormValid || isLoading || extractingCV} className="gap-2">
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
