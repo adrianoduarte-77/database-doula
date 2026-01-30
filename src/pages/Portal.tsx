@@ -39,16 +39,13 @@ import { Stage3WelcomeModal } from "@/components/Stage3WelcomeModal";
 import LogoutModal from "@/components/LogoutModal";
 
 const fadeUp = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-  },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.4,
-      ease: "easeOut",
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
@@ -832,7 +829,7 @@ const Portal = () => {
           {/* Stages Section - Now on Right */}
           <div className="flex-1 p-6 lg:p-8 xl:p-12 relative z-10">
             {isDataReady && (
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="mb-8">
+              <div className="mb-8 animate-fade-in">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 mb-6">
                   <Crown className="w-4 h-4 text-primary" />
                   <span className="text-sm font-display font-semibold text-primary">Método Perfil Glorioso</span>
@@ -845,7 +842,104 @@ const Portal = () => {
                 )}
 
                 <p className="text-lg text-muted-foreground max-w-xl">{currentPhrase}</p>
-              </motion.div>
+              </div>
+            )}
+
+            {isDataReady && (
+              <div className="animate-fade-in">
+                <h2 className="text-xl font-display font-bold text-foreground mb-6">Suas Etapas</h2>
+
+                <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                  {stages.map((stage) => {
+                    const status = getStageStatus(stage.number);
+                    const blocked = isStageBlocked(stage.number);
+                    const Icon = stage.icon;
+                    const isCompleted = status === "completed";
+
+                    return (
+                      <button
+                        key={stage.number}
+                        onClick={() => handleStageClick(stage)}
+                        className={`
+                          group/card relative p-4 text-left
+                          rounded-2xl border border-white/5
+                          transition-all duration-150
+                          ${
+                            blocked
+                              ? "opacity-40 cursor-not-allowed"
+                              : "cursor-pointer hover:bg-card/80 active:scale-[0.98]"
+                          }
+                          ${isCompleted ? "bg-primary/5" : ""}
+                        `}
+                        disabled={blocked}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Number Badge */}
+                          <div
+                            className={`
+                              w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-sm
+                              transition-colors
+                              ${
+                                isCompleted
+                                  ? "bg-primary/20 text-primary"
+                                  : blocked
+                                    ? "bg-muted/30 text-muted-foreground/50"
+                                    : "bg-primary/10 text-primary group-hover/card:bg-primary/20"
+                              }
+                            `}
+                          >
+                            {isCompleted ? <Check className="w-4 h-4" strokeWidth={3} /> : stage.number}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className={`text-sm font-medium ${blocked ? "text-muted-foreground/50" : "text-foreground"}`}
+                            >
+                              {stage.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground/70 line-clamp-1 mt-0.5">{stage.description}</p>
+                          </div>
+
+                          {/* Arrow */}
+                          {blocked ? (
+                            <Lock className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover/card:text-primary transition-colors flex-shrink-0" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Quote */}
+                <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border border-primary/20">
+                  <p className="text-sm text-muted-foreground italic text-center">
+                    "Cada etapa foi desenvolvida para te guiar passo a passo na sua recolocação profissional."
+                  </p>
+                </div>
+
+                {/* Progress Stats */}
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
+                    <p className="text-2xl font-display font-bold text-primary">{stages.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Etapas</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
+                    <p className="text-2xl font-display font-bold text-accent">
+                      {progress.filter((p) => p.completed).length}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Concluídas</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-card/40 border border-border/30 text-center">
+                    <p className="text-2xl font-display font-bold text-foreground">
+                      {Math.round((progress.filter((p) => p.completed).length / stages.length) * 100)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Progresso</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
