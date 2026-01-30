@@ -301,6 +301,7 @@ export type Database = {
           learning_path: string | null
           linkedin_url: string | null
           location: string | null
+          nacionalidade: string | null
           phone: string | null
           platform_activated: boolean
           stage2_completed: boolean | null
@@ -319,6 +320,7 @@ export type Database = {
           learning_path?: string | null
           linkedin_url?: string | null
           location?: string | null
+          nacionalidade?: string | null
           phone?: string | null
           platform_activated?: boolean
           stage2_completed?: boolean | null
@@ -337,6 +339,7 @@ export type Database = {
           learning_path?: string | null
           linkedin_url?: string | null
           location?: string | null
+          nacionalidade?: string | null
           phone?: string | null
           platform_activated?: boolean
           stage2_completed?: boolean | null
