@@ -9,6 +9,7 @@ export interface UserPersonalData {
   linkedinUrl: string;
   phone: string;
   email: string;
+  nacionalidade: string;
 }
 
 interface UseUserProfileReturn {
@@ -30,6 +31,7 @@ const defaultData: UserPersonalData = {
   linkedinUrl: '',
   phone: '',
   email: '',
+  nacionalidade: '',
 };
 
 export function useUserProfile(): UseUserProfileReturn {
@@ -68,7 +70,7 @@ export function useUserProfile(): UseUserProfileReturn {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('full_name, age, location, linkedin_url, phone, email')
+        .select('full_name, age, location, linkedin_url, phone, email, nacionalidade')
         .eq('user_id', user.id)
         .single();
 
@@ -81,6 +83,7 @@ export function useUserProfile(): UseUserProfileReturn {
         linkedinUrl: profile?.linkedin_url || '',
         phone: profile?.phone || '',
         email: profile?.email || user.email || '',
+        nacionalidade: profile?.nacionalidade || '',
       };
 
       setPersonalData(newData);
@@ -112,6 +115,7 @@ export function useUserProfile(): UseUserProfileReturn {
     if (data.location !== undefined) updatePayload.location = data.location;
     if (data.linkedinUrl !== undefined) updatePayload.linkedin_url = data.linkedinUrl;
     if (data.phone !== undefined) updatePayload.phone = data.phone;
+    if (data.nacionalidade !== undefined) updatePayload.nacionalidade = data.nacionalidade;
 
     const { error } = await supabase
       .from('profiles')

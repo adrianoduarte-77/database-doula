@@ -86,7 +86,6 @@ DADOS DO CANDIDATO:
 - Idade: ${formData.idade}
 - Localização: ${formData.localizacao}
 - Profissão: ${formData.profissao}
-- Estado Civil: ${formData.estadoCivil}
 - Interesses: ${formData.interesses}
 - Soft Skills: ${formData.softSkills}
 - Hard Skills: ${formData.hardSkills}

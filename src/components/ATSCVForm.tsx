@@ -176,6 +176,7 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
         email: prev.email || personalData.email,
         linkedin: prev.linkedin || personalData.linkedinUrl,
         idade: prev.idade || personalData.age,
+        nacionalidade: prev.nacionalidade || personalData.nacionalidade.toUpperCase(),
       }));
       setTimeout(() => setIsProfileLoaded(true), 300);
     }
@@ -397,7 +398,8 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
                     value={formData.nacionalidade}
                     onChange={(e) => handleChange("nacionalidade", e.target.value.toUpperCase())}
                     placeholder="BRASILEIRO"
-                    className={inputClass}
+                    readOnly={!!personalData.nacionalidade}
+                    className={personalData.nacionalidade ? `${inputClass} opacity-70` : inputClass}
                   />
                 </div>
 
@@ -657,14 +659,16 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">
+            <label className="flex items-center gap-1 text-xs text-muted-foreground">
               Nacionalidade
+              {formData.nacionalidade && personalData.nacionalidade && <Lock className="w-2.5 h-2.5 text-muted-foreground/50" />}
             </label>
             <Input
               value={formData.nacionalidade}
               onChange={(e) => handleChange("nacionalidade", e.target.value.toUpperCase())}
               placeholder="BRASILEIRO"
-              className={inputClass}
+              readOnly={!!personalData.nacionalidade}
+              className={personalData.nacionalidade ? lockedInputClass : inputClass}
             />
           </div>
 
