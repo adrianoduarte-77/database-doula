@@ -593,7 +593,7 @@ export const InterviewScriptBuilder = ({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
+                className="space-y-6"
               >
                 {/* Success Header */}
                 <Card className="p-4 bg-gradient-to-r from-green-500/10 to-primary/10 border-green-500/30">
@@ -668,81 +668,118 @@ export const InterviewScriptBuilder = ({
                   </motion.div>
                 )}
 
-                {/* Scripts List */}
-                <div className="space-y-3">
-                  {generatedScripts.map((script, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <Card className="overflow-hidden border-border hover:border-primary/30 transition-all">
-                        <div className="p-4 bg-secondary/20">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-primary" />
-                              </div>
-                              <div>
-                                <span className="px-2.5 py-1 bg-primary text-primary-foreground rounded-lg text-xs font-bold">
-                                  {script.keyword}
-                                </span>
-                                <p className="text-xs text-muted-foreground mt-1">{script.experience}</p>
-                              </div>
-                            </div>
-                            {editingIndex !== index && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => startEditing(index)}
-                                className="gap-2 text-muted-foreground hover:text-foreground"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                                Editar
-                              </Button>
-                            )}
+                {/* Scripts List - Grouped by Company */}
+                <div className="space-y-8">
+                  {(() => {
+                    // Group scripts by company
+                    const scriptsByCompany: Record<string, KeywordScript[]> = {};
+                    generatedScripts.forEach((script) => {
+                      const companyKey = script.company || 'Outras Experiências';
+                      if (!scriptsByCompany[companyKey]) {
+                        scriptsByCompany[companyKey] = [];
+                      }
+                      scriptsByCompany[companyKey].push(script);
+                    });
+
+                    return Object.entries(scriptsByCompany).map(([company, scripts], groupIndex) => (
+                      <motion.div
+                        key={company}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: groupIndex * 0.1 }}
+                        className="space-y-4"
+                      >
+                        {/* Company Header */}
+                        <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-primary" />
                           </div>
+                          <h3 className="text-xl font-display font-semibold text-foreground">
+                            {company}
+                          </h3>
                         </div>
 
-                        <div className="p-4 border-t border-border">
-                          {editingIndex === index ? (
-                            <div className="space-y-3">
-                              <Textarea
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                className="min-h-[120px] text-sm"
-                                placeholder="Edite seu roteiro aqui..."
-                              />
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={cancelEdit}
-                                  className="gap-2"
-                                >
-                                  <X className="w-4 h-4" />
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={saveEdit}
-                                  className="gap-2"
-                                >
-                                  <Save className="w-4 h-4" />
-                                  Salvar
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-sm leading-relaxed text-foreground/90">
-                              {script.script}
-                            </p>
-                          )}
+                        {/* Scripts for this company */}
+                        <div className="space-y-3 pl-2">
+                          {scripts.map((script) => {
+                            const originalIndex = generatedScripts.findIndex(
+                              s => s.keyword === script.keyword && s.company === script.company
+                            );
+                            return (
+                              <motion.div
+                                key={`${script.company}-${script.keyword}`}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.05 }}
+                              >
+                                <Card className="overflow-hidden border-border/50 hover:border-primary/30 transition-all">
+                                  <div className="p-4">
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                      <div className="space-y-1">
+                                        <span className="px-3 py-1 bg-primary text-primary-foreground rounded-lg text-xs font-bold">
+                                          {script.keyword}
+                                        </span>
+                                        {script.role && (
+                                          <p className="text-xs text-muted-foreground pl-1">
+                                            {script.role}
+                                          </p>
+                                        )}
+                                      </div>
+                                      {editingIndex !== originalIndex && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => startEditing(originalIndex)}
+                                          className="gap-2 text-muted-foreground hover:text-foreground h-8"
+                                        >
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                          Editar
+                                        </Button>
+                                      )}
+                                    </div>
+
+                                    {editingIndex === originalIndex ? (
+                                      <div className="space-y-3">
+                                        <Textarea
+                                          value={editValue}
+                                          onChange={(e) => setEditValue(e.target.value)}
+                                          className="min-h-[120px] text-sm"
+                                          placeholder="Edite seu roteiro aqui..."
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={cancelEdit}
+                                            className="gap-2"
+                                          >
+                                            <X className="w-4 h-4" />
+                                            Cancelar
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            onClick={saveEdit}
+                                            className="gap-2"
+                                          >
+                                            <Save className="w-4 h-4" />
+                                            Salvar
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm leading-relaxed text-foreground/90">
+                                        {script.script}
+                                      </p>
+                                    )}
+                                  </div>
+                                </Card>
+                              </motion.div>
+                            );
+                          })}
                         </div>
-                      </Card>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ));
+                  })()}
                 </div>
 
                 {/* Complete Button */}
