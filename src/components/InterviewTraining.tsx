@@ -31,15 +31,15 @@ export const InterviewTraining = ({
 }: InterviewTrainingProps) => {
   const [step, setStep] = useState<TrainingStep>('intro');
 
-  // Group scripts by company
-  const scriptsByCompany = experienceScripts.reduce((acc, script) => {
-    const key = script.company || 'Outras';
+  // Group scripts by company + role combination
+  const scriptsByExperience = experienceScripts.reduce((acc, script) => {
+    const key = `${script.company}||${script.role}`;
     if (!acc[key]) {
-      acc[key] = { role: script.role, scripts: [] };
+      acc[key] = { company: script.company, role: script.role, scripts: [] };
     }
     acc[key].scripts.push(script);
     return acc;
-  }, {} as Record<string, { role: string; scripts: KeywordScript[] }>);
+  }, {} as Record<string, { company: string; role: string; scripts: KeywordScript[] }>);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -157,8 +157,8 @@ export const InterviewTraining = ({
                 Depois, conecte suas experiências com as palavras-chave da vaga:
               </p>
 
-              {Object.entries(scriptsByCompany).map(([company, { role, scripts }]) => (
-                <div key={company} className="space-y-3">
+              {Object.entries(scriptsByExperience).map(([key, { company, role, scripts }]) => (
+                <div key={key} className="space-y-3">
                   {/* Company Header */}
                   <div className="flex items-center gap-3 px-1">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -166,7 +166,7 @@ export const InterviewTraining = ({
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">
-                        {role} na {company}
+                        {company} — {role}
                       </h3>
                       <p className="text-xs text-muted-foreground">
                         {scripts.length} {scripts.length === 1 ? 'roteiro' : 'roteiros'}
@@ -174,19 +174,14 @@ export const InterviewTraining = ({
                     </div>
                   </div>
 
-                  {/* Scripts for this company */}
+                  {/* Scripts for this experience */}
                   <div className="space-y-3">
                     {scripts.map((script) => (
                       <Card key={script.keyword} className="p-4 bg-secondary/20">
                         <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                              {script.keyword}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              • {script.role} — {script.company}
-                            </span>
-                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 inline-block">
+                            {script.keyword}
+                          </span>
                           <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
                             {script.script}
                           </p>
