@@ -13,12 +13,15 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  RefreshCw,
+  Database,
 } from "lucide-react";
 import { CoverLetterFormData } from "@/types/cover-letter";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useBaseCV } from "@/hooks/useBaseCV";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,12 +34,14 @@ interface CoverLetterFormProps {
 export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFormProps) {
   const { toast } = useToast();
   const { personalData, isLoading: isLoadingProfile } = useUserProfile();
+  const { baseCV, isLoading: isLoadingBaseCV, saveBaseCV, hasBaseCV } = useBaseCV();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const [mobileStep, setMobileStep] = useState<1 | 2>(1);
   const [extractingCV, setExtractingCV] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [usingStoredCV, setUsingStoredCV] = useState(false);
   const [formData, setFormData] = useState<CoverLetterFormData>({
     nome: "",
     idade: "",
@@ -67,6 +72,18 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
     }
   }, [personalData, isLoadingProfile]);
 
+  // Load stored base CV on mount
+  useEffect(() => {
+    if (!isLoadingBaseCV && baseCV && !formData.cvAnalysis) {
+      setFormData(prev => ({
+        ...prev,
+        cvAnalysis: baseCV.cv_analysis,
+      }));
+      setUploadedFileName(baseCV.original_filename || "CV Salvo");
+      setUsingStoredCV(true);
+    }
+  }, [isLoadingBaseCV, baseCV, formData.cvAnalysis]);
+
   const handleChange = (field: keyof CoverLetterFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -93,6 +110,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
 
     setExtractingCV(true);
     setUploadedFileName(file.name);
+    setUsingStoredCV(false);
 
     toast({
       title: "Processando CV...",
@@ -124,9 +142,12 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
         const cvText = formatExtractedCV(data);
         handleChange("cvAnalysis", cvText);
 
+        // Save to database for persistence
+        await saveBaseCV(cvText, file.name);
+
         toast({
-          title: "CV extraído! ✓",
-          description: "Os dados do currículo foram extraídos com sucesso.",
+          title: "CV extraído e salvo! ✓",
+          description: "Os dados foram salvos para uso futuro.",
         });
       } catch (error: any) {
         console.error("Error extracting CV:", error);
@@ -223,8 +244,8 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
   const isFormValid = formData.nome && formData.profissao && formData.cvAnalysis;
   const isStep1Valid = formData.nome.trim().length > 0;
 
-  // Show loading while profile is being fetched
-  if (isLoadingProfile) {
+  // Show loading while profile or base CV is being fetched
+  if (isLoadingProfile || isLoadingBaseCV) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -461,13 +482,29 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                     <Loader2 className="w-5 h-5 text-primary animate-spin" />
                     <span className="text-sm text-primary font-medium">Extraindo dados do CV...</span>
                   </div>
+                ) : usingStoredCV ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/30 cursor-pointer hover:bg-primary/15 transition-colors"
+                  >
+                    <Database className="w-5 h-5 text-primary" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">{uploadedFileName}</p>
+                      <p className="text-xs text-primary">CV salvo carregado automaticamente</p>
+                    </div>
+                    <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                  </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 cursor-pointer hover:bg-green-500/15 transition-colors"
+                  >
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{uploadedFileName}</p>
                       <p className="text-xs text-muted-foreground">CV extraído com sucesso</p>
                     </div>
+                    <RefreshCw className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -699,13 +736,35 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
             <span className="text-sm text-primary font-medium">Extraindo dados do currículo...</span>
           </div>
+        ) : usingStoredCV ? (
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/30 cursor-pointer hover:bg-primary/15 transition-colors"
+          >
+            <Database className="w-5 h-5 text-primary" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">{uploadedFileName}</p>
+              <p className="text-xs text-primary">CV salvo carregado automaticamente</p>
+            </div>
+            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <RefreshCw className="w-3 h-3" />
+              Trocar
+            </span>
+          </div>
         ) : (
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20 cursor-pointer hover:bg-green-500/15 transition-colors"
+          >
             <CheckCircle2 className="w-5 h-5 text-green-500" />
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">{uploadedFileName}</p>
               <p className="text-xs text-muted-foreground">Dados extraídos com sucesso</p>
             </div>
+            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <RefreshCw className="w-3 h-3" />
+              Trocar
+            </span>
           </div>
         )}
       </div>

@@ -15,10 +15,13 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  RefreshCw,
+  Database,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useBaseCV } from "@/hooks/useBaseCV";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -44,8 +47,10 @@ const normalInputClass = "w-full h-11 px-4 rounded-xl border-transparent bg-mute
 
 export function CVForm({ onGenerate, isLoading }: CVFormProps) {
   const { personalData, isLoading: isLoadingProfile } = useUserProfile();
+  const { baseCV, isLoading: isLoadingBaseCV, saveBaseCV, hasBaseCV } = useBaseCV();
   const isMobile = useIsMobile();
   const [mobileStep, setMobileStep] = useState<1 | 2>(1);
+  const [usingStoredCV, setUsingStoredCV] = useState(false);
   
   const [formData, setFormData] = useState<CVFormData>({
     nome: "",
@@ -60,6 +65,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionDone, setExtractionDone] = useState(false);
+  const [storedFilename, setStoredFilename] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -75,6 +81,25 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
       }));
     }
   }, [personalData, isLoadingProfile]);
+
+  // Load stored base CV on mount
+  useEffect(() => {
+    if (!isLoadingBaseCV && baseCV && !extractionDone && !formData.experiences) {
+      // Parse stored CV to extract experiences and educacao
+      const cvText = baseCV.cv_analysis;
+      const expMatch = cvText.match(/EXPERIÊNCIAS PROFISSIONAIS:\n([\s\S]*?)(?=\n\nEDUCAÇÃO:|$)/);
+      const eduMatch = cvText.match(/EDUCAÇÃO:\n([\s\S]*?)$/);
+      
+      setFormData(prev => ({
+        ...prev,
+        experiences: expMatch ? expMatch[1].trim() : cvText,
+        educacao: eduMatch ? eduMatch[1].trim() : prev.educacao,
+      }));
+      setExtractionDone(true);
+      setUsingStoredCV(true);
+      setStoredFilename(baseCV.original_filename || "CV Salvo");
+    }
+  }, [isLoadingBaseCV, baseCV, extractionDone, formData.experiences]);
 
   const resetPdfInput = () => {
     setPdfFile(null);
@@ -119,6 +144,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
 
   const extractPdfData = async (file: File) => {
     setIsExtracting(true);
+    setUsingStoredCV(false);
 
     try {
       const base64 = await fileToBase64(file);
@@ -137,11 +163,16 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
           educacao: data.educacao || prev.educacao,
         }));
 
+        // Save to database for persistence
+        const cvText = `EXPERIÊNCIAS PROFISSIONAIS:\n${data.experiencias || ""}\n\nEDUCAÇÃO:\n${data.educacao || ""}`;
+        await saveBaseCV(cvText, file.name);
+        setStoredFilename(file.name);
+
         setExtractionDone(true);
         toast({
-          title: "CV analisado com sucesso!",
+          title: "CV analisado e salvo!",
           description:
-            "Experiências e educação extraídas. Verifique os dados e preencha a vaga alvo.",
+            "Experiências extraídas e salvas para uso futuro. Preencha a vaga alvo.",
         });
       } else {
         throw new Error("Não foi possível extrair dados do currículo");
@@ -186,8 +217,8 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
     formData.experiences.trim().length > 50 &&
     formData.jobDescription.trim().length > 50;
 
-  // Show loading while profile is being fetched
-  if (isLoadingProfile) {
+  // Show loading while profile or base CV is being fetched
+  if (isLoadingProfile || isLoadingBaseCV) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -381,8 +412,18 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
                     </div>
                   ) : extractionDone ? (
                     <div className="flex flex-col items-center gap-3">
-                      <CheckCircle className="w-8 h-8 text-green-500" />
-                      <p className="text-sm font-medium">{pdfFile?.name}</p>
+                      {usingStoredCV ? (
+                        <>
+                          <Database className="w-8 h-8 text-primary" />
+                          <p className="text-sm font-medium">{storedFilename}</p>
+                          <p className="text-xs text-primary">CV salvo carregado</p>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-8 h-8 text-green-500" />
+                          <p className="text-sm font-medium">{pdfFile?.name || storedFilename}</p>
+                        </>
+                      )}
                       <p className="text-xs text-muted-foreground">Clique para trocar</p>
                     </div>
                   ) : (
@@ -616,13 +657,30 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
             </div>
           ) : extractionDone ? (
             <div className="flex flex-col items-center gap-3">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-sm font-medium text-foreground">{pdfFile?.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Dados extraídos com sucesso! Clique para trocar o arquivo
-                </p>
-              </div>
+              {usingStoredCV ? (
+                <>
+                  <Database className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{storedFilename}</p>
+                    <p className="text-xs text-primary">
+                      CV salvo carregado automaticamente
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique para enviar um novo arquivo
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{pdfFile?.name || storedFilename}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Dados extraídos com sucesso! Clique para trocar o arquivo
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
