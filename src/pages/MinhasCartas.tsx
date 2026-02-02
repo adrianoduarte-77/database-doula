@@ -123,11 +123,11 @@ const MinhasCartas = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
-      <div className="relative z-10 container max-w-4xl py-6 md:py-10 px-4">
+      <div className="relative z-10 max-w-4xl mx-auto py-6 md:py-10 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <Button
@@ -176,11 +176,11 @@ const MinhasCartas = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="space-y-3">
             {coverLetters.map((coverLetter, index) => (
               <div
                 key={coverLetter.id}
-                className="bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all duration-300 animate-fade-in group"
+                className="bg-card/80 rounded-2xl px-4 py-3.5 border border-border/50 hover:border-primary/30 transition-all duration-300 animate-fade-in group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-center gap-3">
@@ -205,7 +205,7 @@ const MinhasCartas = () => {
                     </div>
                   </div>
 
-                  {/* Actions - Compact icons */}
+                  {/* Actions */}
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
                       variant="ghost"
