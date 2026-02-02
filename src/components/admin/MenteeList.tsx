@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, FileText, Target, ChevronRight, CheckCircle, Clock, AlertCircle, Trash2, UserX } from 'lucide-react';
+import { User, FileText, Target, ChevronRight, CheckCircle, Clock, AlertCircle, Trash2, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,7 +48,7 @@ export const MenteeList = ({ onSelectMentee }: MenteeListProps) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [clearDialogOpen, setClearDialogOpen] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
+  const [hideDialogOpen, setHideDialogOpen] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMentees();
@@ -66,10 +66,11 @@ export const MenteeList = ({ onSelectMentee }: MenteeListProps) => {
 
       const adminUserIds = (adminRoles || []).map(r => r.user_id);
 
-      // Get all profiles (users) excluding admins
+      // Get all profiles (users) excluding admins and hidden users
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
+        .eq('hidden_from_admin', false)
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -156,27 +157,22 @@ export const MenteeList = ({ onSelectMentee }: MenteeListProps) => {
     }
   };
 
-  const handleDeleteMentee = async (menteeUserId: string, menteeName: string) => {
+  const handleHideMentee = async (menteeUserId: string, menteeName: string) => {
     setActionLoading(menteeUserId);
-    setDeleteDialogOpen(null);
+    setHideDialogOpen(null);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-delete-mentee', {
-        body: { menteeUserId },
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ hidden_from_admin: true })
+        .eq('user_id', menteeUserId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      toast.success(`${menteeName} foi removido da plataforma.`);
+      toast.success(`${menteeName} foi ocultado do painel.`);
       fetchMentees();
     } catch (error) {
-      console.error('Error deleting mentee:', error);
-      toast.error('Erro ao excluir mentorado');
+      console.error('Error hiding mentee:', error);
+      toast.error('Erro ao ocultar mentorado');
     } finally {
       setActionLoading(null);
     }
@@ -295,11 +291,11 @@ export const MenteeList = ({ onSelectMentee }: MenteeListProps) => {
                     Limpar dados
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                    onClick={() => setDeleteDialogOpen(mentee.user_id)}
+                    className="text-muted-foreground cursor-pointer"
+                    onClick={() => setHideDialogOpen(mentee.user_id)}
                   >
-                    <UserX className="w-4 h-4 mr-2" />
-                    Excluir mentorado
+                    <EyeOff className="w-4 h-4 mr-2" />
+                    Ocultar do painel
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -331,27 +327,26 @@ export const MenteeList = ({ onSelectMentee }: MenteeListProps) => {
                 </AlertDialogContent>
               </AlertDialog>
 
-              {/* Delete User Dialog */}
-              <AlertDialog open={deleteDialogOpen === mentee.user_id} onOpenChange={(open) => !open && setDeleteDialogOpen(null)}>
+              {/* Hide User Dialog */}
+              <AlertDialog open={hideDialogOpen === mentee.user_id} onOpenChange={(open) => !open && setHideDialogOpen(null)}>
                 <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="text-destructive">Excluir mentorado permanentemente</AlertDialogTitle>
+                    <AlertDialogTitle>Ocultar mentorado do painel</AlertDialogTitle>
                     <AlertDialogDescription className="space-y-2">
                       <p>
-                        Você está prestes a excluir <strong>{mentee.full_name || 'Sem nome'}</strong> permanentemente.
+                        Você está prestes a ocultar <strong>{mentee.full_name || 'Sem nome'}</strong> do painel.
                       </p>
-                      <p className="text-sm text-destructive/80">
-                        ⚠️ Esta ação é irreversível! O usuário será removido da plataforma e não poderá mais fazer login.
+                      <p className="text-sm text-muted-foreground">
+                        O usuário continuará ativo na plataforma, apenas não aparecerá mais na lista de mentorados. Útil para remover contas de teste.
                       </p>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
-                      className="bg-destructive hover:bg-destructive/90"
-                      onClick={() => handleDeleteMentee(mentee.user_id, mentee.full_name || 'Sem nome')}
+                      onClick={() => handleHideMentee(mentee.user_id, mentee.full_name || 'Sem nome')}
                     >
-                      Excluir permanentemente
+                      Ocultar do painel
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
