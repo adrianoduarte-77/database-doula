@@ -591,10 +591,10 @@ const Portal = () => {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside
-        className="hidden lg:flex flex-col w-20 hover:w-64 transition-all duration-300 group bg-card/80 border-r border-border/50 fixed left-0 top-0 bottom-0 z-50"
+        className="hidden lg:flex flex-col w-20 hover:w-64 transition-all duration-300 group bg-black border-r border-white/10 fixed left-0 top-0 bottom-0 z-50"
       >
         {/* Logo */}
-        <div className="p-4 flex items-center justify-center border-b border-border/30">
+        <div className="p-4 flex items-center justify-center border-b border-white/10">
           <img src={logoAD} alt="AD" className="w-12 h-12 rounded-xl flex-shrink-0" />
         </div>
 
@@ -602,7 +602,7 @@ const Portal = () => {
         <nav className="flex-1 py-6 px-3 space-y-2">
           {sidebarLinks.map((link, index) => {
             if ("divider" in link) {
-              return <div key={index} className="h-px bg-border/30 my-4" />;
+              return <div key={index} className="h-px bg-white/10 my-4" />;
             }
 
             const Icon = link.icon;
@@ -617,7 +617,7 @@ const Portal = () => {
                       ? "bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30"
                       : link.active
                         ? "bg-primary/15 text-primary border-primary/30"
-                        : "text-muted-foreground hover:bg-primary/10 hover:text-foreground border-transparent"
+                        : "text-white/70 hover:bg-white/10 hover:text-white border-transparent"
                   }
                 `}
               >
@@ -635,16 +635,16 @@ const Portal = () => {
 
         {/* User Section */}
         {user ? (
-          <div className="p-4 border-t border-border/30">
+          <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
                 <User className="w-5 h-5 text-primary" />
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
-                <p className="text-sm font-medium text-foreground truncate">{userName || "Usuário"}</p>
+                <p className="text-sm font-medium text-white truncate">{userName || "Usuário"}</p>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  className="text-xs text-white/50 hover:text-white transition-colors"
                 >
                   Sair
                 </button>
