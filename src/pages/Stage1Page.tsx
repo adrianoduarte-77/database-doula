@@ -95,14 +95,8 @@ const Stage1Page = () => {
       return;
     }
 
-    // TEMPORARY: Block stage 1 for non-admin/dev users
-    if (!isAdmin && !isDev) {
-      navigate('/');
-      return;
-    }
-
     fetchDiagnostic();
-  }, [user, authLoading, adminLoading, devLoading, isAdmin, isDev, navigate]);
+  }, [user, authLoading, adminLoading, devLoading, navigate]);
 
   const fetchDiagnostic = async () => {
     try {
