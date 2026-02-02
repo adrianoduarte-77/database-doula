@@ -103,10 +103,12 @@ const KEYWORDS_INTRO_MESSAGES = [
 ];
 
 export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
-  const hasStartedBefore = sessionStorage.getItem(STAGE4_STARTED_KEY) === 'true';
+  // Intro animation should be driven by the intro flag, not by whether the user has started before.
+  // This guarantees that when we reset `stage4_intro_seen`, the mentor typing animation comes back.
+  const hasSeenIntro = sessionStorage.getItem(STAGE4_INTRO_KEY) === 'true';
   const initialVisitedSteps = getVisitedSteps();
   
-  const [showIntroduction, setShowIntroduction] = useState(!hasStartedBefore);
+  const [showIntroduction, setShowIntroduction] = useState(!hasSeenIntro);
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState<number[]>(initialVisitedSteps);
   const [isLoading, setIsLoading] = useState(false);
@@ -206,8 +208,11 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
           const savedData = progress.data_content as unknown as StepData;
           setData((prev) => mergeStepData(savedData, prev));
           
-          // Hide introduction if user has saved progress
-          setShowIntroduction(false);
+          // Only hide introduction if the user has already seen it.
+          // If `stage4_intro_seen` is reset, we want the typing animation back.
+          if (sessionStorage.getItem(STAGE4_INTRO_KEY) === 'true') {
+            setShowIntroduction(false);
+          }
           sessionStorage.setItem(STAGE4_STARTED_KEY, 'true');
 
           // Only decide initial step once, and never override user's navigation
