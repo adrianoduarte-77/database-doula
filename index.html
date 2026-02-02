@@ -4,14 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Security Headers -->
+    <!-- Security Headers (only those that work in meta tags) -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
     
-    <!-- Content Security Policy -->
+    <!-- Content Security Policy (frame-ancestors removed - only works in HTTP headers) -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co;
@@ -19,7 +18,6 @@
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: https: blob:;
       connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.lovable.dev https://*.lovableproject.com;
-      frame-ancestors 'none';
       form-action 'self';
       base-uri 'self';
     " />
