@@ -85,17 +85,18 @@ export const InterviewScriptBuilder = ({
   initialScripts,
   onScriptsChange,
 }: InterviewScriptBuilderProps) => {
-  const hasInitialScriptsRef = useRef((initialScripts?.length ?? 0) > 0);
+  // Check if we have scripts from the start (either from props or cache)
+  const hasScripts = (initialScripts?.length ?? 0) > 0;
   
-  const [conversationStep, setConversationStep] = useState(hasInitialScriptsRef.current ? mentorMessages.length : 0);
-  const [showBuilder, setShowBuilder] = useState(hasInitialScriptsRef.current);
+  const [conversationStep, setConversationStep] = useState(hasScripts ? mentorMessages.length : 0);
+  const [showBuilder, setShowBuilder] = useState(hasScripts);
   const [isGeneratingScripts, setIsGeneratingScripts] = useState(false);
   const [generatedScripts, setGeneratedScripts] = useState<KeywordScript[]>(initialScripts || []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
   const [careerIntro, setCareerIntro] = useState<CareerIntro | null>(null);
   const [isLoadingIntro, setIsLoadingIntro] = useState(false);
-  const [introAlreadyLoaded, setIntroAlreadyLoaded] = useState(false);
+  const [introAlreadyLoaded, setIntroAlreadyLoaded] = useState(hasScripts);
   
   // Mapping state
   const [manualExperiences, setManualExperiences] = useState<ManualExperience[]>([]);
@@ -104,6 +105,7 @@ export const InterviewScriptBuilder = ({
   const [keywordMappings, setKeywordMappings] = useState<KeywordMapping[]>([]);
 
   const persistTimerRef = useRef<number | null>(null);
+  const hasHydratedRef = useRef(hasScripts);
 
   // Initialize + keep mappings in sync with keywords (no auto-assign)
   useEffect(() => {
@@ -113,14 +115,17 @@ export const InterviewScriptBuilder = ({
     });
   }, [keywords.join('|')]);
 
+  // Hydrate from initialScripts when they arrive (async from DB)
   useEffect(() => {
+    if (hasHydratedRef.current) return;
     if (initialScripts && initialScripts.length > 0) {
       setGeneratedScripts(initialScripts);
       setConversationStep(mentorMessages.length);
       setShowBuilder(true);
-      hasInitialScriptsRef.current = true;
+      setIntroAlreadyLoaded(true);
+      hasHydratedRef.current = true;
     }
-  }, [JSON.stringify(initialScripts || [])]);
+  }, [initialScripts]);
 
   useEffect(() => {
     if (!onScriptsChange) return;
@@ -134,7 +139,7 @@ export const InterviewScriptBuilder = ({
   }, [generatedScripts, onScriptsChange]);
 
   useEffect(() => {
-    if (hasInitialScriptsRef.current) return;
+    if (hasHydratedRef.current) return;
     if (introAlreadyLoaded) return;
     
     const loadCareerIntro = async () => {
@@ -162,7 +167,7 @@ export const InterviewScriptBuilder = ({
   }, [linkedinAbout, introAlreadyLoaded]);
 
   useEffect(() => {
-    if (hasInitialScriptsRef.current) return;
+    if (hasHydratedRef.current) return;
     if (conversationStep < mentorMessages.length) {
       const timer = setTimeout(() => {
         setConversationStep(prev => prev + 1);
