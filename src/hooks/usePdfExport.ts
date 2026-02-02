@@ -198,11 +198,37 @@ export function usePdfExport(options: UsePdfExportOptions = {}) {
 
         if (block.type === "subheading") {
           y += 4; // Space before subheading (experience header)
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(10);
-          pdf.setTextColor(...black);
-          const lines = pdf.splitTextToSize(block.text.trim(), maxWidth);
-          writeLines(lines, 5);
+          const text = block.text.trim();
+          
+          // Check if it's an experience header (empresa — cargo format)
+          if (text.includes(" — ")) {
+            const [empresa, cargo] = text.split(" — ");
+            
+            // Empresa in blue with underline style
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.setTextColor(...blue);
+            const empresaWidth = pdf.getTextWidth(empresa);
+            pdf.text(empresa, margin, y);
+            
+            // Separator " — " in black
+            pdf.setTextColor(...black);
+            pdf.text(" — ", margin + empresaWidth, y);
+            const sepWidth = pdf.getTextWidth(" — ");
+            
+            // Cargo in bold black
+            pdf.setFont("helvetica", "bold");
+            pdf.setTextColor(...black);
+            pdf.text(cargo, margin + empresaWidth + sepWidth, y);
+            
+            y += 5;
+          } else {
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(10);
+            pdf.setTextColor(...blue);
+            const lines = pdf.splitTextToSize(text, maxWidth);
+            writeLines(lines, 5);
+          }
           continue;
         }
 
