@@ -1139,6 +1139,7 @@ Exemplo:
         savedScripts={savedScripts}
         onSaveComplete={async () => {
           if (user?.id) {
+            // Mark stage as completed
             await supabase.from('mentoring_progress').upsert({
               user_id: user.id,
               stage_number: stageNumber,
@@ -1148,7 +1149,25 @@ Exemplo:
             }, {
               onConflict: 'user_id,stage_number',
             });
+
+            // Clear stage 4 working data from database (interview is saved separately)
+            await supabase.from('collected_data')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('data_type', 'stage4_data');
+            
+            await supabase.from('collected_data')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('data_type', 'stage4_interview_experiences');
           }
+
+          // Clear all sessionStorage for stage 4
+          sessionStorage.removeItem(STAGE4_STARTED_KEY);
+          sessionStorage.removeItem(STAGE4_VISITED_STEPS_KEY);
+          sessionStorage.removeItem(STAGE4_DATA_CACHE_KEY);
+          sessionStorage.removeItem(STAGE4_SCRIPTS_CACHE_KEY);
+
           setShowSaveModal(false);
           toast({
             title: "Parabéns! 🎉",
