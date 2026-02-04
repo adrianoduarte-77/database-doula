@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "recover">("login");
   const [step, setStep] = useState<1 | 2>(1);
 
   const [email, setEmail] = useState("");
@@ -31,8 +31,24 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const isLogin = mode === "login";
+  const isSignup = mode === "signup";
+  const isRecover = mode === "recover";
+
   const goNextStep = () => setStep(2);
   const goBackStep = () => setStep(1);
+  const goToLogin = () => {
+    setMode("login");
+    setStep(1);
+  };
+  const goToSignup = () => {
+    setMode("signup");
+    setStep(1);
+  };
+  const goToRecover = () => {
+    setMode("recover");
+    setStep(1);
+  };
 
   const isStep1Valid = fullName.trim() && phone.trim() && age.trim() && location.trim() && nacionalidade.trim();
   const passwordRequirements = useMemo(
@@ -62,8 +78,8 @@ const Auth = () => {
 
     if (!isLogin && !isPasswordValid) {
       toast({
-        title: "Senha inválida",
-        description: "A senha não atende aos requisitos mínimos.",
+        title: "Senha invÃ¡lida",
+        description: "A senha nÃ£o atende aos requisitos mÃ­nimos.",
         variant: "destructive",
       });
       return;
@@ -72,15 +88,34 @@ const Auth = () => {
     if (!isLogin && !acceptTerms) {
       toast({
         title: "Aceite os termos",
-        description: "Você precisa aceitar os termos.",
+        description: "VocÃª precisa aceitar os termos.",
         variant: "destructive",
       });
       return;
     }
 
-    setLoading(true);
-
     try {
+      if (isRecover) {
+        if (!email.trim()) {
+          toast({
+            title: "Informe seu email",
+            description: "Digite o email para receber o link de recuperação.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setLoading(true);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        toast({
+          title: "Confira seu email",
+          description: "Se este email estiver cadastrado, enviaremos um link de recuperação.",
+        });
+        return;
+      }
+
+      setLoading(true);
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -115,6 +150,11 @@ const Auth = () => {
       setLoading(false);
     }
   };
+  const canSubmit = isRecover || isLogin || (isSignup && step === 2);
+  const isSubmitDisabled =
+    loading || (isSignup && !acceptTerms) || (isRecover && !email.trim());
+  const showCredentials = isLogin || (isSignup && step === 2);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       {/* glow background */}
@@ -129,17 +169,17 @@ const Auth = () => {
         </div>
 
         {/* step indicator */}
-        {!isLogin && (
+        {isSignup && (
           <div className="flex justify-center gap-2 mb-6">
             <div className={`h-1 w-16 rounded-full ${step === 1 ? "bg-primary" : "bg-muted"}`} />
             <div className={`h-1 w-16 rounded-full ${step === 2 ? "bg-primary" : "bg-muted"}`} />
           </div>
         )}
 
-        <form onSubmit={step === 2 || isLogin ? handleSubmit : (e) => e.preventDefault()}>
+        <form onSubmit={canSubmit ? handleSubmit : (e) => e.preventDefault()}>
           <AnimatePresence mode="wait">
             {/* STEP 1 */}
-            {!isLogin && step === 1 && (
+            {isSignup && step === 1 && (
               <motion.div
                 key="step1"
                 initial={{ opacity: 0, x: 20 }}
@@ -186,7 +226,7 @@ const Auth = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     className="pl-10"
-                    placeholder="Localização"
+                    placeholder="LocalizaÃ§Ã£o"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
@@ -208,8 +248,44 @@ const Auth = () => {
               </motion.div>
             )}
 
+            {/* RECOVER PASSWORD */}
+            {isRecover && (
+              <motion.div
+                key="recover"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-4"
+              >
+                <Button type="button" variant="ghost" onClick={goToLogin}>
+                  ← Voltar
+                </Button>
+
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold">Recuperar senha</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Enviaremos um link para redefinir sua senha.
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <Button disabled={isSubmitDisabled} className="w-full">
+                  {loading ? "Carregando..." : "Enviar link de recuperação"}
+                </Button>
+              </motion.div>
+            )}
+
             {/* STEP 2 */}
-            {(isLogin || step === 2) && (
+            {showCredentials && (
               <motion.div
                 key="step2"
                 initial={{ opacity: 0, x: 20 }}
@@ -265,11 +341,23 @@ const Auth = () => {
                           ? "text-yellow-500"
                           : "text-green-500"
                       }`}>
-                        {requirementsMet <= 1 ? "Fraca" : requirementsMet <= 3 ? "Média" : "Forte"}
+                        {requirementsMet <= 1 ? "Fraca" : requirementsMet <= 3 ? "MÃ©dia" : "Forte"}
                       </p>
                     </div>
                   )}
                 </div>
+
+                {isLogin && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={goToRecover}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                )}
 
                 {!isLogin && (
                   <>
@@ -278,7 +366,7 @@ const Auth = () => {
                         checked={emailNotifications}
                         onCheckedChange={(v) => setEmailNotifications(v as boolean)}
                       />
-                      Receber notificações
+                      Receber notificaÃ§Ãµes
                     </label>
 
                     <label className="flex items-center gap-2 text-sm">
@@ -288,7 +376,7 @@ const Auth = () => {
                   </>
                 )}
 
-                <Button disabled={loading || (!isLogin && !acceptTerms)} className="w-full">
+                <Button disabled={isSubmitDisabled} className="w-full">
                   {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
                 </Button>
               </motion.div>
@@ -299,10 +387,7 @@ const Auth = () => {
         {/* toggle login/signup */}
         <div className="text-center mt-6 text-sm">
           <button
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setStep(1);
-            }}
+            onClick={() => (isLogin ? goToSignup() : goToLogin())}
             className="text-primary hover:underline"
           >
             {isLogin ? "Criar conta" : "Já tem conta? Entrar"}
@@ -314,3 +399,4 @@ const Auth = () => {
 };
 
 export default Auth;
+
