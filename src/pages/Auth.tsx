@@ -78,7 +78,7 @@ const Auth = () => {
 
     if (!isLogin && !isPasswordValid) {
       toast({
-        title: "Senha invÃ¡lida",
+        title: "Senha invÃ¡lida.",
         description: "A senha nÃ£o atende aos requisitos mÃ­nimos.",
         variant: "destructive",
       });
