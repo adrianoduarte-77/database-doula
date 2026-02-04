@@ -177,7 +177,10 @@ const Auth = () => {
           </div>
         )}
 
-        <form onSubmit={canSubmit ? handleSubmit : (e) => e.preventDefault()}>
+        <form
+          data-testid="auth-form"
+          onSubmit={canSubmit ? handleSubmit : (e) => e.preventDefault()}
+        >
           <AnimatePresence mode="wait">
             {/* STEP 1 */}
             {isSignup && step === 1 && (
