@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
 const Auth = () => {
+  const RESET_REDIRECT_URL = "https://mentoria.grupoatalhos.com.br/redefinir-senha";
   const [mode, setMode] = useState<"login" | "signup" | "recover">("login");
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -76,7 +77,7 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isLogin && !isPasswordValid) {
+    if (isSignup && !isPasswordValid) {
       toast({
         title: "Senha invÃ¡lida.",
         description: "A senha nÃ£o atende aos requisitos mÃ­nimos.",
@@ -85,7 +86,7 @@ const Auth = () => {
       return;
     }
 
-    if (!isLogin && !acceptTerms) {
+    if (isSignup && !acceptTerms) {
       toast({
         title: "Aceite os termos",
         description: "VocÃª precisa aceitar os termos.",
@@ -106,7 +107,10 @@ const Auth = () => {
         }
 
         setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: RESET_REDIRECT_URL,
+        });
+        if (error) throw error;
         toast({
           title: "Confira seu email",
           description: "Se este email estiver cadastrado, enviaremos um link de recuperação.",

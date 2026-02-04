@@ -23,6 +23,7 @@ import ActivatePlatform from "./pages/ActivatePlatform";
 import SupportPage from "./pages/SupportPage";
 import SettingsPage from "./pages/SettingsPage";
 import GiftPage from "./pages/GiftPage";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/" element={<Portal />} />
               <Route path="/cv" element={<CVPage />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/redefinir-senha" element={<ResetPassword />} />
               <Route path="/ativar" element={<AdminBypassGate><ActivatePlatform /></AdminBypassGate>} />
               <Route path="/meus-cvs" element={<MeusCVs />} />
               <Route path="/minhas-cartas" element={<MinhasCartas />} />
