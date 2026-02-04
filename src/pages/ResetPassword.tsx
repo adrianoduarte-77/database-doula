@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -8,10 +8,13 @@ import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 
 const ResetPassword = () => {
+  const RECOVERY_STORAGE_KEY = "recovery_context";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasRecoveryContext, setHasRecoveryContext] = useState(false);
 
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -33,8 +36,60 @@ const ResetPassword = () => {
     [passwordRequirements],
   );
 
+  const recoveryInfo = useMemo(() => {
+    const hashValue = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+    const params = new URLSearchParams(hashValue);
+    const error = params.get("error");
+    const errorCode = params.get("error_code");
+    const errorDescription = params.get("error_description");
+    const type = params.get("type");
+    const accessToken = params.get("access_token");
+    const isRecovery = type === "recovery" || Boolean(accessToken);
+    const hasError = Boolean(error || errorCode);
+
+    let message = "";
+    if (hasError) {
+      message =
+        errorCode === "otp_expired"
+          ? "Link expirado. Solicite um novo e-mail de recuperação."
+          : errorDescription
+          ? decodeURIComponent(errorDescription.replace(/\+/g, " "))
+          : "Link inválido ou expirado.";
+    }
+
+    return { isRecovery, hasError, message };
+  }, [location.hash]);
+
+  useEffect(() => {
+    if (recoveryInfo.hasError) {
+      sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
+      setHasRecoveryContext(false);
+      return;
+    }
+
+    if (recoveryInfo.isRecovery) {
+      sessionStorage.setItem(RECOVERY_STORAGE_KEY, "1");
+      setHasRecoveryContext(true);
+      return;
+    }
+
+    setHasRecoveryContext(sessionStorage.getItem(RECOVERY_STORAGE_KEY) === "1");
+  }, [recoveryInfo.hasError, recoveryInfo.isRecovery]);
+
+  const canReset = (hasRecoveryContext || recoveryInfo.isRecovery) && !recoveryInfo.hasError;
+  const submitDisabled = loading || !canReset;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canReset) {
+      toast({
+        title: "Link inválido",
+        description: "Abra esta página a partir do link enviado por e-mail.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!isPasswordValid) {
       toast({
@@ -62,6 +117,7 @@ const ResetPassword = () => {
         title: "Senha atualizada",
         description: "Agora você já pode entrar com a nova senha.",
       });
+      sessionStorage.removeItem(RECOVERY_STORAGE_KEY);
       navigate("/auth");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Erro desconhecido";
@@ -92,6 +148,18 @@ const ResetPassword = () => {
             Crie uma nova senha para sua conta.
           </p>
         </div>
+
+        {recoveryInfo.hasError && (
+          <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {recoveryInfo.message}
+          </div>
+        )}
+
+        {!recoveryInfo.hasError && !canReset && (
+          <div className="mb-4 rounded-lg border border-muted/40 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            Abra esta página a partir do link enviado por e-mail.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -146,7 +214,7 @@ const ResetPassword = () => {
             />
           </div>
 
-          <Button disabled={loading} className="w-full">
+          <Button disabled={submitDisabled} className="w-full">
             {loading ? "Carregando..." : "Salvar nova senha"}
           </Button>
         </form>
@@ -156,3 +224,5 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
+
+
