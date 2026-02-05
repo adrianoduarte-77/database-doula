@@ -7,7 +7,7 @@ import { useDev } from '@/hooks/useDev';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Target, FileText, FileDown, Sparkles, CheckCircle2, RefreshCw, Zap, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Target, FileText, FileDown, Sparkles, CheckCircle2, RefreshCw, Zap, HelpCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Funnel {
@@ -83,6 +83,7 @@ const Stage3Page = () => {
   // Conversation state
   const [visibleMessages, setVisibleMessages] = useState(0);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [showAdvanceButton, setShowAdvanceButton] = useState(false);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -157,14 +158,19 @@ const Stage3Page = () => {
       }, delay);
 
       return () => clearTimeout(timer);
-    } else if (visibleMessages >= mentorMessages.length && !showFunnel) {
-      // Wait and show funnel
+    } else if (visibleMessages >= mentorMessages.length && !showFunnel && !showAdvanceButton) {
+      // Show the advance button after all messages
       const timer = setTimeout(() => {
-        setShowFunnel(true);
-      }, 1500);
+        setShowAdvanceButton(true);
+      }, 800);
       return () => clearTimeout(timer);
     }
-  }, [visibleMessages, showFunnel, funnel, hasSeenAnimation]);
+  }, [visibleMessages, showFunnel, showAdvanceButton, funnel, hasSeenAnimation]);
+
+  const handleAdvance = () => {
+    setShowFunnel(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (authLoading || loading) {
     return (
@@ -321,6 +327,24 @@ const Stage3Page = () => {
                       <span className="w-2 h-2 bg-accent/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-2 h-2 bg-accent/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-accent/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </motion.div>
+                  )}
+
+                  {/* Advance button */}
+                  {showAdvanceButton && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex justify-center pt-4"
+                    >
+                      <Button
+                        onClick={handleAdvance}
+                        className="gap-2"
+                      >
+                        Ver meu Funil
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </motion.div>
                   )}
                 </motion.div>
