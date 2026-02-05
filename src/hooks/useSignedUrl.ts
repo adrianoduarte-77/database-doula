@@ -57,14 +57,34 @@ export const useSignedUrl = () => {
     const url = await getSignedUrl(filePath);
     if (!url) return;
 
-    // Trigger download
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || 'download';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setLoading(true);
+    try {
+      // Fetch the file as blob to avoid browser blocking external URLs
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Trigger download from local blob URL
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      // Fallback: try opening in new tab (may be blocked by some browsers)
+      window.open(url, '_blank');
+    } finally {
+      setLoading(false);
+    }
   }, [getSignedUrl]);
 
   return { getSignedUrl, downloadFile, loading };
