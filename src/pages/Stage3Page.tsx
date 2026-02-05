@@ -21,22 +21,25 @@ interface Funnel {
   word_url: string | null;
 }
 
-// Stage 3 conversational messages - different style
+// Stage 3 conversational messages - with timing like Stage 1
 const mentorMessages = [
   {
     id: 1,
     text: "Agora é hora de colocar o seu novo Perfil do LinkedIn e CV em ação no mercado 🙏🏻",
-    type: 'intro'
+    type: 'intro',
+    delay: 0
   },
   {
     id: 2,
     text: "Você vai acessar todos os sites listados no seu Funil de Oportunidades.",
-    type: 'normal'
+    type: 'normal',
+    delay: 2.5
   },
   {
     id: 3,
     text: "Nos que já tem cadastro, atualize com:",
-    type: 'normal'
+    type: 'normal',
+    delay: 5
   },
   {
     id: 4,
@@ -45,12 +48,14 @@ const mentorMessages = [
       "CV atualizado",
       "Carta de Apresentação (copie e cole no campo \"sobre você\" se o site não tiver espaço específico)"
     ],
-    type: 'checklist'
+    type: 'checklist',
+    delay: 7.5
   },
   {
     id: 5,
     text: "Nos sites novos, crie seu perfil com essas mesmas informações.",
-    type: 'normal'
+    type: 'normal',
+    delay: 10.5
   },
   {
     id: 6,
@@ -59,7 +64,8 @@ const mentorMessages = [
       "Após 1 semana aplicando o Funil, Recomendo avançar para a etapa Revisão da Gupy (Bônus).",
       "Após 2 semanas, pode avançar para a etapa de Esteira de Conteúdos"
     ],
-    type: 'tips'
+    type: 'tips',
+    delay: 13
   }
 ];
 
@@ -146,12 +152,14 @@ const Stage3Page = () => {
     }
   }, [showFunnel, user?.id]);
 
-  // Animate conversation messages (only if not seen before)
+  // Animate conversation messages (only if not seen before) - same timing as Stage 1
   useEffect(() => {
     if (!funnel || hasSeenAnimation()) return;
 
     if (visibleMessages < mentorMessages.length && !showFunnel) {
-      const delay = visibleMessages === 0 ? 600 : 1200;
+      const nextMessage = mentorMessages[visibleMessages];
+      const prevDelay = visibleMessages > 0 ? mentorMessages[visibleMessages - 1].delay : 0;
+      const delay = visibleMessages === 0 ? 800 : (nextMessage.delay - prevDelay) * 1000;
 
       const timer = setTimeout(() => {
         setVisibleMessages(prev => prev + 1);
@@ -162,7 +170,7 @@ const Stage3Page = () => {
       // Show the advance button after all messages
       const timer = setTimeout(() => {
         setShowAdvanceButton(true);
-      }, 800);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [visibleMessages, showFunnel, showAdvanceButton, funnel, hasSeenAnimation]);
