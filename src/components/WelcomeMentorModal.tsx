@@ -9,12 +9,13 @@ interface WelcomeMentorModalProps {
   onComplete: () => void;
 }
 
+// Messages with delays matching Stage 1 timing
 const mentorMessages = [
-  "E aí, tudo certo? 👋",
-  "Você acabou de dar o primeiro passo pra transformar sua carreira.",
-  "A partir de agora, eu vou te guiar por cada etapa desse processo...",
-  "Agora começa a parte que separa quem tenta de quem realmente faz acontecer",
-  "Preparado pra mudar de patamar?",
+  { text: "E aí, tudo certo? 👋", delay: 0 },
+  { text: "Você acabou de dar o primeiro passo pra transformar sua carreira.", delay: 2.5 },
+  { text: "A partir de agora, eu vou te guiar por cada etapa desse processo...", delay: 5.5 },
+  { text: "Agora começa a parte que separa quem tenta de quem realmente faz acontecer", delay: 8.5 },
+  { text: "Preparado pra mudar de patamar?", delay: 11 },
 ];
 
 // Typing indicator component - CSS only
@@ -57,8 +58,12 @@ const WelcomeMentorModal = ({ open, onComplete }: WelcomeMentorModalProps) => {
     // Start with typing indicator
     setIsTyping(true);
 
-    mentorMessages.forEach((_, index) => {
-      // Show message and start typing for next
+    // Use delay-based timing like Stage 1
+    mentorMessages.forEach((msg, index) => {
+      const prevDelay = index > 0 ? mentorMessages[index - 1].delay : 0;
+      const delayMs = index === 0 ? 800 : (msg.delay - prevDelay) * 1000;
+      const cumulativeDelay = index === 0 ? delayMs : 800 + msg.delay * 1000;
+      
       const timer = setTimeout(
         () => {
           setVisibleMessages(index + 1);
@@ -69,17 +74,20 @@ const WelcomeMentorModal = ({ open, onComplete }: WelcomeMentorModalProps) => {
             setIsTyping(false);
           }
         },
-        (index + 1) * 1200,
+        cumulativeDelay,
       );
       timers.push(timer);
     });
+
+    // Get last message delay
+    const lastDelay = mentorMessages[mentorMessages.length - 1].delay;
 
     // Show typing before button
     const typingButtonTimer = setTimeout(
       () => {
         setIsTyping(true);
       },
-      mentorMessages.length * 1200 + 400,
+      800 + lastDelay * 1000 + 1500,
     );
     timers.push(typingButtonTimer);
 
@@ -89,7 +97,7 @@ const WelcomeMentorModal = ({ open, onComplete }: WelcomeMentorModalProps) => {
         setIsTyping(false);
         setShowButton(true);
       },
-      (mentorMessages.length + 1) * 1200,
+      800 + lastDelay * 1000 + 3500,
     );
     timers.push(buttonTimer);
 
@@ -138,10 +146,10 @@ const WelcomeMentorModal = ({ open, onComplete }: WelcomeMentorModalProps) => {
 
           {/* Messages container */}
           <div className="space-y-3 mb-6 min-h-[200px]">
-            {mentorMessages.slice(0, visibleMessages).map((message, index) => (
+            {mentorMessages.slice(0, visibleMessages).map((msg, index) => (
               <MessageBubble 
                 key={index} 
-                message={message} 
+                message={msg.text} 
                 delay={0}
               />
             ))}
