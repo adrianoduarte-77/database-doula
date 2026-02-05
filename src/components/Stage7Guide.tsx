@@ -25,12 +25,14 @@ import {
   CONTENT_TYPE_COLORS,
   CONTENT_TYPE_ICONS 
 } from '@/types/linkedin-content';
+import { AnimatedStep, AnimatedCard } from "@/components/ui/AnimatedStep";
+import { useAnimationMode } from "@/hooks/useAnimationMode";
 
 interface Stage7GuideProps {
   stageNumber: number;
 }
 
-// Animation variants (same as GupyGuide)
+// Animation variants for desktop only (framer-motion)
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
@@ -99,6 +101,40 @@ const CONTENT_TYPES: { type: ContentType; label: string; Icon: React.ComponentTy
   },
 ];
 
+// Step container that uses CSS on mobile, framer-motion on desktop
+const StepContainer = ({ 
+  stepKey, 
+  children, 
+  useCSSAnimations,
+  className = "space-y-6"
+}: { 
+  stepKey: string; 
+  children: React.ReactNode; 
+  useCSSAnimations: boolean;
+  className?: string;
+}) => {
+  if (useCSSAnimations) {
+    return (
+      <div key={stepKey} className={`animate-mobile-slide-up ${className}`}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <motion.div
+      key={stepKey}
+      variants={fadeInUp}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState<ContentType | null>(null);
@@ -125,6 +161,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { startGeneration, endGeneration, isMounted } = useGenerationAbort();
+  const { useCSSAnimations } = useAnimationMode();
 
   // Scroll to top when step changes
   const scrollToTop = () => {
@@ -403,16 +440,8 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
     switch (currentStep) {
       case 1:
         return (
-          <motion.div
-            key="step-1"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-1" useCSSAnimations={useCSSAnimations}>
+            <motion.div
               className="text-center mb-8"
               variants={staggerContainer}
               initial="initial"
@@ -488,21 +517,13 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </StepContainer>
         );
 
       case 2:
         return (
-          <motion.div
-            key="step-2"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-2" useCSSAnimations={useCSSAnimations}>
+            <motion.div
               className="text-center mb-6"
               variants={staggerContainer}
               initial="initial"
@@ -667,21 +688,13 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 </AnimatePresence>
               </Tabs>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 3:
         return (
-          <motion.div
-            key="step-3"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-3" useCSSAnimations={useCSSAnimations}>
+            <motion.div
               className="text-center mb-6"
               variants={staggerContainer}
               initial="initial"
@@ -767,7 +780,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 Continuar <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 4:
@@ -854,16 +867,8 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
 
       case 5:
         return (
-          <motion.div
-            key="step-5"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-5" useCSSAnimations={useCSSAnimations}>
+            <motion.div
               className="text-center mb-6"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1037,7 +1042,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 <ExternalLink className="h-4 w-4" /> Abrir LinkedIn
               </Button>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       default:
