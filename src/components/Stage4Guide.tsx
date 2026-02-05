@@ -262,11 +262,19 @@ export const Stage4Guide = ({ stageNumber }: Stage4GuideProps) => {
     loadProgress();
   }, [user?.id]);
 
-  // Mark current step as visited and update intro visibility
+  // Scroll to top utility
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Mark current step as visited, update intro visibility, and scroll to top
   useEffect(() => {
     if (currentStep > 0) {
       markStepVisited(currentStep);
       setVisitedSteps(getVisitedSteps());
+      
+      // Scroll to top on step change
+      scrollToTop();
       
       // If step 5 was already visited, skip intro
       if (currentStep === 5 && getVisitedSteps().includes(5)) {

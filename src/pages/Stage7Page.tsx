@@ -8,6 +8,11 @@ const Stage7Page = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
 

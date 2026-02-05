@@ -88,6 +88,11 @@ const Stage3Page = () => {
   const [visibleMessages, setVisibleMessages] = useState(0);
   const [showFunnel, setShowFunnel] = useState(false);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     // Wait for all loading states
     if (authLoading || adminLoading || devLoading) return;
