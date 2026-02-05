@@ -250,6 +250,7 @@ const CVPage = () => {
 
       setCvData(fullCV);
       setViewState("preview");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       toast({ title: "Currículo gerado com sucesso! 🎉", description: "Seu currículo foi criado com IA." });
     } catch (error: any) {
       toast({ title: "Erro ao gerar currículo", description: error.message, variant: "destructive" });
@@ -261,6 +262,7 @@ const CVPage = () => {
   const handleGenerateATS = (data: ATSCVData) => {
     setAtsCvData(data);
     setViewState("preview");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     toast({ title: "Currículo ATS gerado! 🎉", description: "Seu currículo está formatado para sistemas ATS." });
   };
 
