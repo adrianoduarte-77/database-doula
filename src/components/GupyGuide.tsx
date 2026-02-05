@@ -38,8 +38,10 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle } from 'lucide-react';
 import { MentorAvatar } from "./MentorAvatar";
+import { AnimatedStep, AnimatedCard } from "@/components/ui/AnimatedStep";
+import { useAnimationMode } from "@/hooks/useAnimationMode";
 
-// Animation variants for reuse
+// Animation variants for desktop only (framer-motion)
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
@@ -140,9 +142,10 @@ interface SkillsStepProps {
   setNewHabilidade: (value: string) => void;
   addHabilidade: () => void;
   removeHabilidade: (index: number) => void;
+  useCSSAnimations: boolean;
 }
 
-const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabilidade, removeHabilidade }: SkillsStepProps) => {
+const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabilidade, removeHabilidade, useCSSAnimations }: SkillsStepProps) => {
   const [visibleMessages, setVisibleMessages] = useState<number>(0);
   const [isTyping, setIsTyping] = useState(false);
   const [conversationComplete, setConversationComplete] = useState(false);
@@ -185,16 +188,9 @@ const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabili
 
   // Show guide directly if already advanced
   if (showGuide) {
-    return (
-      <motion.div
-        key="step-7-guide"
-        variants={fadeInUp}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="space-y-6"
-      >
+    // Mobile: CSS animation wrapper, Desktop: framer-motion wrapper
+    const wrapperContent = (
+      <>
         {/* LinkedIn Step */}
         <Card className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 max-w-2xl mx-auto">
           <div className="flex items-start gap-4">
@@ -248,32 +244,21 @@ const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabili
         </Card>
 
         {/* Warning */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="p-4 bg-destructive/10 border-destructive/30 max-w-2xl mx-auto">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-destructive">Atenção!</p>
-                <p className="text-muted-foreground mt-1">
-                  Só adicione competências que <strong className="text-foreground">apareçam como opção</strong> ao digitar. 
-                  O sistema da Gupy não reconhece competências digitadas manualmente.
-                </p>
-              </div>
+        <Card className="p-4 bg-destructive/10 border-destructive/30 max-w-2xl mx-auto">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-destructive">Atenção!</p>
+              <p className="text-muted-foreground mt-1">
+                Só adicione competências que <strong className="text-foreground">apareçam como opção</strong> ao digitar. 
+                O sistema da Gupy não reconhece competências digitadas manualmente.
+              </p>
             </div>
-          </Card>
-        </motion.div>
+          </div>
+        </Card>
 
         {/* Skills Input Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-4 max-w-2xl mx-auto"
-        >
+        <div className="space-y-4 max-w-2xl mx-auto">
           <div className="text-center space-y-1">
             <h3 className="font-display text-lg font-semibold">Suas Habilidades</h3>
             <p className="text-sm text-muted-foreground">
@@ -289,25 +274,16 @@ const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabili
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addHabilidade())}
               className="flex-1"
             />
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={addHabilidade} disabled={data.habilidades.length >= 30 || !newHabilidade.trim()}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </motion.div>
+            <Button onClick={addHabilidade} disabled={data.habilidades.length >= 30 || !newHabilidade.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
 
           {data.habilidades.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-wrap gap-2"
-            >
+            <div className="flex flex-wrap gap-2">
               {data.habilidades.map((hab, index) => (
-                <motion.span
+                <span
                   key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-sm"
                 >
                   {hab}
@@ -317,37 +293,46 @@ const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabili
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
-                </motion.span>
+                </span>
               ))}
-            </motion.div>
+            </div>
           )}
 
           <p className="text-xs text-muted-foreground text-center">
             {data.habilidades.length}/30 habilidades
           </p>
-        </motion.div>
+        </div>
+      </>
+    );
+
+    if (useCSSAnimations) {
+      return (
+        <div key="step-7-guide" className="animate-mobile-slide-up space-y-6">
+          {wrapperContent}
+        </div>
+      );
+    }
+
+    return (
+      <motion.div
+        key="step-7-guide"
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="space-y-6"
+      >
+        {wrapperContent}
       </motion.div>
     );
   }
 
   // Show conversation with "Avançar" button
-  return (
-    <motion.div
-      key="step-7-conversation"
-      variants={fadeInUp}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="space-y-6"
-    >
+  const conversationContent = (
+    <>
       {/* Mentor Conversation */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-card/50 border border-border rounded-2xl p-5 max-w-2xl mx-auto"
-      >
+      <div className="bg-card/50 border border-border rounded-2xl p-5 max-w-2xl mx-auto">
         {/* Mentor Header */}
         <div className="flex items-center gap-3 mb-4">
           <MentorAvatar size="lg" />
@@ -359,59 +344,92 @@ const SkillsStepWithMentor = ({ data, newHabilidade, setNewHabilidade, addHabili
 
         {/* Messages */}
         <div className="space-y-2.5 min-h-[180px]">
-          <AnimatePresence>
-            {skillsMentorMessages.slice(0, visibleMessages).map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[90%]"
-              >
-                <p className="text-foreground text-sm leading-relaxed">{message}</p>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {skillsMentorMessages.slice(0, visibleMessages).map((message, index) => (
+            <div
+              key={index}
+              className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[90%] animate-mobile-slide-up"
+            >
+              <p className="text-foreground text-sm leading-relaxed">{message}</p>
+            </div>
+          ))}
 
           {/* Typing indicator */}
-          <AnimatePresence>
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <TypingIndicator />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {isTyping && <TypingIndicator />}
         </div>
 
         {/* Avançar Button */}
-        <AnimatePresence>
-          {conversationComplete && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mt-6 flex justify-center"
+        {conversationComplete && (
+          <div className="mt-6 flex justify-center animate-mobile-fade-in">
+            <Button
+              onClick={handleAdvance}
+              className="gap-2 px-6"
+              size="lg"
             >
-              <Button
-                onClick={handleAdvance}
-                className="gap-2 px-6"
-                size="lg"
-              >
-                Avançar
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+              Avançar
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (useCSSAnimations) {
+    return (
+      <div key="step-7-conversation" className="animate-mobile-slide-up space-y-6">
+        {conversationContent}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      key="step-7-conversation"
+      variants={fadeInUp}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
+      {conversationContent}
     </motion.div>
   );
 };
+// Step container that uses CSS on mobile, framer-motion on desktop
+const StepContainer = ({ 
+  stepKey, 
+  children, 
+  useCSSAnimations,
+  className = "space-y-6"
+}: { 
+  stepKey: string; 
+  children: React.ReactNode; 
+  useCSSAnimations: boolean;
+  className?: string;
+}) => {
+  if (useCSSAnimations) {
+    return (
+      <div key={stepKey} className={`animate-mobile-slide-up ${className}`}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <motion.div
+      key={stepKey}
+      variants={fadeInUp}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 export const GupyGuide = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -431,6 +449,7 @@ export const GupyGuide = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { startGeneration, endGeneration, isMounted } = useGenerationAbort();
+  const { useCSSAnimations } = useAnimationMode();
 
   // Scroll to top when step changes or after AI generation
   const scrollToTop = () => {
@@ -800,16 +819,8 @@ export const GupyGuide = () => {
     switch (currentStep) {
       case 1:
         return (
-          <motion.div
-            key="step-1"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <GupyInfoBox 
+          <StepContainer stepKey="step-1" useCSSAnimations={useCSSAnimations}>
+            <GupyInfoBox
               steps={[
                 { num: "1", text: "Acesse seu perfil na Gupy" },
                 { num: "2", text: '"Experiência Acadêmica"' },
@@ -920,22 +931,14 @@ export const GupyGuide = () => {
                 </Button>
               </motion.div>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 2:
         return (
-          <motion.div
-            key="step-2"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
+          <StepContainer stepKey="step-2" useCSSAnimations={useCSSAnimations}>
 
-            <motion.div 
+            <motion.div
               className="text-center space-y-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1074,21 +1077,13 @@ export const GupyGuide = () => {
                 )}
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 3:
         return (
-          <motion.div
-            key="step-3"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <GupyInfoBox 
+          <StepContainer stepKey="step-3" useCSSAnimations={useCSSAnimations}>
+            <GupyInfoBox
               steps={[
                 { num: "1", text: "Acesse seu perfil na Gupy" },
                 { num: "2", text: '"Experiências Profissionais"' },
@@ -1183,21 +1178,13 @@ export const GupyGuide = () => {
                 </Button>
               </motion.div>
             )}
-          </motion.div>
+          </StepContainer>
         );
 
       case 4:
         return (
-          <motion.div
-            key="step-4"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <GupyInfoBox 
+          <StepContainer stepKey="step-4" useCSSAnimations={useCSSAnimations}>
+            <GupyInfoBox
               steps={[
                 { num: "1", text: "Acesse seu perfil na Gupy" },
                 { num: "2", text: '"Idiomas"' },
@@ -1306,22 +1293,14 @@ export const GupyGuide = () => {
                 </Button>
               </motion.div>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 5:
         return (
-          <motion.div
-            key="step-5"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
+          <StepContainer stepKey="step-5" useCSSAnimations={useCSSAnimations}>
 
-            <motion.div 
+            <motion.div
               className="text-center space-y-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1539,21 +1518,13 @@ export const GupyGuide = () => {
                 )}
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 6:
         return (
-          <motion.div
-            key="step-6"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <GupyInfoBox 
+          <StepContainer stepKey="step-6" useCSSAnimations={useCSSAnimations}>
+            <GupyInfoBox
               steps={[
                 { num: "1", text: "Acesse seu perfil na Gupy" },
                 { num: "2", text: '"Conquistas e Certificados"' },
@@ -1662,7 +1633,7 @@ export const GupyGuide = () => {
                 </Button>
               </motion.div>
             )}
-          </motion.div>
+          </StepContainer>
         );
 
       case 7:
@@ -1673,21 +1644,14 @@ export const GupyGuide = () => {
             setNewHabilidade={setNewHabilidade}
             addHabilidade={addHabilidade}
             removeHabilidade={removeHabilidade}
+            useCSSAnimations={useCSSAnimations}
           />
         );
 
       case 8:
         return (
-          <motion.div
-            key="step-8"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-8" useCSSAnimations={useCSSAnimations}>
+            <motion.div
               className="text-center space-y-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1800,7 +1764,7 @@ export const GupyGuide = () => {
                 )}
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       case 9:
@@ -1920,16 +1884,8 @@ export const GupyGuide = () => {
 
       case 10:
         return (
-          <motion.div
-            key="step-10"
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="space-y-8"
-          >
-            <motion.div 
+          <StepContainer stepKey="step-10" useCSSAnimations={useCSSAnimations} className="space-y-8">
+            <motion.div
               className="text-center space-y-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2013,7 +1969,7 @@ export const GupyGuide = () => {
                 Revisar e Editar
               </Button>
             </motion.div>
-          </motion.div>
+          </StepContainer>
         );
 
       default:
