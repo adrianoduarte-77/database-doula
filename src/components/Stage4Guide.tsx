@@ -27,7 +27,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatedStep } from "@/components/ui/AnimatedStep";
+import { useAnimationMode } from "@/hooks/useAnimationMode";
 import { InterviewScriptBuilder, KeywordScript } from "./InterviewScriptBuilder";
 import { AboutMeGenerator } from "./AboutMeGenerator";
 import { HelpCircle } from 'lucide-react';
@@ -464,14 +465,7 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
     switch (currentStep) {
       case 1:
         return (
-          <motion.div
-            key="step-1"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-1" className="space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Building2 className="w-8 h-8 text-primary" />
@@ -528,19 +522,12 @@ Liste todas as palavras-chave da vaga para que eu possa criar o meu roteiro de e
                 }}
               />
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 2:
         return (
-          <motion.div
-            key="step-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-2" className="space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-primary" />
@@ -569,19 +556,12 @@ Exemplo:
                 {data.jobDescription.length} caracteres
               </p>
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 3:
         return (
-          <motion.div
-            key="step-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-3" className="space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <User className="w-8 h-8 text-primary" />
@@ -610,19 +590,12 @@ Exemplo:
                 className="min-h-[200px] text-base"
               />
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 4:
         return (
-          <motion.div
-            key="step-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-4" className="space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Briefcase className="w-8 h-8 text-primary" />
@@ -656,36 +629,24 @@ Exemplo:
                 className="min-h-[300px] text-base"
               />
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 5:
         // Show intro only if step not visited before and no script yet
         if (showAboutMeIntro && !data.aboutMeScript && !visitedSteps.includes(5)) {
           return (
-            <motion.div
-              key="step-5-intro"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
+            <AnimatedStep stepKey="step-5-intro">
               <StepConversationIntro
                 messages={ABOUT_ME_INTRO_MESSAGES}
                 buttonText="Começar"
                 onContinue={() => setShowAboutMeIntro(false)}
               />
-            </motion.div>
+            </AnimatedStep>
           );
         }
         return (
-          <motion.div
-            key="step-5-form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
+          <AnimatedStep stepKey="step-5-form">
             <AboutMeGenerator
               onComplete={async (script) => {
                 const newData = { ...data, aboutMeScript: script };
@@ -695,37 +656,24 @@ Exemplo:
                 setCurrentStep(6);
               }}
             />
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 6:
         // Show intro only if step not visited before and no keywords yet
         if (showKeywordsIntro && data.keywords.length === 0 && !visitedSteps.includes(6)) {
           return (
-            <motion.div
-              key="step-6-intro"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
+            <AnimatedStep stepKey="step-6-intro">
               <StepConversationIntro
                 messages={KEYWORDS_INTRO_MESSAGES}
                 buttonText="Analisar Palavras-Chave"
                 onContinue={() => setShowKeywordsIntro(false)}
               />
-            </motion.div>
+            </AnimatedStep>
           );
         }
         return (
-          <motion.div
-            key="step-6-content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-8"
-          >
+          <AnimatedStep stepKey="step-6-content" className="space-y-8">
             <div className="text-center space-y-3">
               <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-primary" />
@@ -819,19 +767,12 @@ Exemplo:
                 </Card>
               )}
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 7:
         return (
-          <motion.div
-            key="step-7"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-7" className="space-y-6">
             <InterviewScriptBuilder
               keywords={data.keywords}
               companyName={data.companyName}
@@ -848,7 +789,7 @@ Exemplo:
                 setCurrentStep(8);
               }}
             />
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 8:
@@ -857,14 +798,7 @@ Exemplo:
         const CLOSING_QUESTION_2 = `Baseado no que você estudou do meu currículo e perfil, em tudo que pude compartilhar sobre a minha trajetória, e considerando os desafios da vaga, como você acredita que eu consiga contribuir para ajudar nessa posição?`;
         
         return (
-          <motion.div
-            key="step-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="max-w-3xl mx-auto space-y-6 md:space-y-8"
-          >
+          <AnimatedStep stepKey="step-8" className="max-w-3xl mx-auto space-y-6 md:space-y-8">
             {/* Header */}
             <div className="text-center space-y-3">
               <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
@@ -1005,26 +939,19 @@ Exemplo:
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 9:
         return (
-          <motion.div
-            key="step-9"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <AnimatedStep stepKey="step-9" className="space-y-6">
             <InterviewTraining
               companyName={data.companyName}
               aboutMeScript={data.aboutMeScript || ''}
               experienceScripts={savedScripts}
               onComplete={() => setCurrentStep(10)}
             />
-          </motion.div>
+          </AnimatedStep>
         );
 
       case 10:
@@ -1037,14 +964,7 @@ Exemplo:
           sessionStorage.setItem(step10IntroKey, 'true');
           
           return (
-            <motion.div
-              key="step-10-intro"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4"
-            >
+            <AnimatedStep stepKey="step-10-intro" className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
               <MentorAvatar size="xxl" />
               <div className="text-center space-y-3 max-w-md">
                 <h2 className="font-display text-2xl font-bold">Parabéns! 🎉</h2>
@@ -1063,19 +983,12 @@ Exemplo:
                 Ver Meus Roteiros
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            </motion.div>
+            </AnimatedStep>
           );
         }
         
         return (
-          <motion.div
-            key="step-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center space-y-6 py-12"
-          >
+          <AnimatedStep stepKey="step-10" className="text-center space-y-6 py-12">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
               <Check className="w-10 h-10 text-primary" />
             </div>
@@ -1130,7 +1043,7 @@ Exemplo:
                 </>
               )}
             </div>
-          </motion.div>
+          </AnimatedStep>
         );
 
       default:
@@ -1208,13 +1121,11 @@ Exemplo:
           })()}
         </div>
         
-        {/* Progress bar */}
+        {/* Progress bar - CSS animation for 60fps on mobile */}
         <div className="mt-3 h-1 bg-muted rounded-full overflow-hidden">
-          <motion.div 
-            className="h-full bg-primary rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-            transition={{ duration: 0.3 }}
+          <div 
+            className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
           />
         </div>
       </div>
@@ -1290,9 +1201,7 @@ Exemplo:
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        <AnimatePresence mode="wait">
-          {renderStepContent()}
-        </AnimatePresence>
+        {renderStepContent()}
       </div>
 
       {/* Footer Navigation - Fixed at bottom */}
