@@ -7,12 +7,8 @@ import { useDev } from '@/hooks/useDev';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Target, FileText, ChevronRight, FileDown, Sparkles, ArrowRight, CheckCircle2, Linkedin, RefreshCw, Zap } from 'lucide-react';
+import { ArrowLeft, Target, FileText, FileDown, Sparkles, CheckCircle2, RefreshCw, Zap, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Logo } from '@/components/Logo';
-import mentorPhoto from '@/assets/mentor-photo.png';
-import { HelpCircle } from 'lucide-react';
-import { StageCompleteButton } from '@/components/StageCompleteButton';
 
 interface Funnel {
   id: string;
@@ -241,18 +237,18 @@ const Stage3Page = () => {
                   transition={{ duration: 0.4 }}
                   className="space-y-4"
                 >
-                  {/* Mentor header */}
+                  {/* Assistant header */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-3 mb-6"
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-accent/50 shadow-lg">
-                      <img src={mentorPhoto} alt="Mentor" className="w-full h-full object-cover" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border border-primary/30">
+                      <Sparkles className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">Duarte</p>
-                      <p className="text-xs text-muted-foreground">Seu mentor</p>
+                      <p className="font-semibold text-foreground">Orientações</p>
+                      <p className="text-xs text-muted-foreground">Etapa 3</p>
                     </div>
                   </motion.div>
 
@@ -425,72 +421,28 @@ const Stage3Page = () => {
                     </motion.div>
                   )}
 
-                  {/* Action cards */}
+                  {/* CV Reminder Card - Modern Minimalist */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="grid gap-4 sm:grid-cols-2"
+                    className="max-w-lg mx-auto"
                   >
-                    <Card className="p-4 bg-gradient-to-br from-[#0077B5]/10 to-transparent border-[#0077B5]/30 hover:border-[#0077B5]/50 transition-colors">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Linkedin className="w-5 h-5 text-[#0077B5]" />
-                        <span className="font-semibold text-sm">LinkedIn</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Atualize seu perfil com as melhorias do diagnóstico
-                      </p>
-                    </Card>
-
-                    <Card className="p-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/30 hover:border-primary/50 transition-colors">
-                      <div className="flex items-center gap-3 mb-2">
-                        <FileText className="w-5 h-5 text-primary" />
-                        <span className="font-semibold text-sm">CV Atualizado</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Use o CV gerado na Etapa 2 em todos os cadastros
-                      </p>
-                    </Card>
-                  </motion.div>
-
-                  {/* Next step CTA */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <Card className="p-6 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                          <ArrowRight className="w-6 h-6 text-accent" />
+                    <div className="relative p-6 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-accent/5 border border-primary/20">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-6 h-6 text-primary" />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">
-                            Próximo passo
+                        <div className="flex-1 space-y-1">
+                          <h3 className="font-semibold text-foreground">
+                            CV Atualizado
                           </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Após aplicar em todas as vagas, siga para a Etapa 4 - Convencer o Recrutador.
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Use o CV gerado na Etapa 2 em todos os cadastros das plataformas listadas no seu funil.
                           </p>
                         </div>
                       </div>
-                      <Button
-                        className="w-full mt-4 gap-2"
-                        onClick={() => navigate('/etapa/4')}
-                      >
-                        Ir para Etapa 4
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Card>
-                  </motion.div>
-
-                  {/* Complete Stage Button */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="flex justify-center pt-4"
-                  >
-                    <StageCompleteButton stageNumber={3} />
+                    </div>
                   </motion.div>
                 </motion.div>
               )}
