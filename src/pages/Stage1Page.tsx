@@ -7,12 +7,9 @@ import { useDev } from '@/hooks/useDev';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Download, FileText, Linkedin, Sparkles, ArrowRight, FileDown } from 'lucide-react';
+import { ArrowLeft, FileText, Linkedin, ArrowRight, FileDown, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Logo } from '@/components/Logo';
 import { MentorAvatar } from '@/components/MentorAvatar';
-import { HelpCircle } from 'lucide-react';
-import { StageCompleteButton } from '@/components/StageCompleteButton';
 
 interface Diagnostic {
   id: string;
@@ -83,8 +80,8 @@ const Stage1Page = () => {
 
   // Conversation state
   const [visibleMessages, setVisibleMessages] = useState(0);
-  const [messagesExiting, setMessagesExiting] = useState(false);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [showAdvanceButton, setShowAdvanceButton] = useState(false);
 
   useEffect(() => {
     // Wait for all loading states
@@ -133,7 +130,7 @@ const Stage1Page = () => {
   useEffect(() => {
     if (!diagnostic || hasSeenAnimation()) return;
 
-    if (visibleMessages < mentorMessages.length && !messagesExiting) {
+    if (visibleMessages < mentorMessages.length && !showDiagnostic) {
       const nextMessage = mentorMessages[visibleMessages];
       const prevDelay = visibleMessages > 0 ? mentorMessages[visibleMessages - 1].delay : 0;
       const delay = visibleMessages === 0 ? 800 : (nextMessage.delay - prevDelay) * 1000;
@@ -143,24 +140,19 @@ const Stage1Page = () => {
       }, delay);
 
       return () => clearTimeout(timer);
-    } else if (visibleMessages >= mentorMessages.length && !showDiagnostic && !messagesExiting) {
-      // Wait 2s and then start exit animation
+    } else if (visibleMessages >= mentorMessages.length && !showDiagnostic && !showAdvanceButton) {
+      // Show the advance button after all messages
       const timer = setTimeout(() => {
-        setMessagesExiting(true);
-      }, 2000);
+        setShowAdvanceButton(true);
+      }, 800);
       return () => clearTimeout(timer);
     }
-  }, [visibleMessages, showDiagnostic, messagesExiting, diagnostic, hasSeenAnimation]);
+  }, [visibleMessages, showDiagnostic, showAdvanceButton, diagnostic, hasSeenAnimation]);
 
-  // After messages exit, show diagnostic
-  useEffect(() => {
-    if (messagesExiting && !showDiagnostic) {
-      const timer = setTimeout(() => {
-        setShowDiagnostic(true);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [messagesExiting, showDiagnostic]);
+  const handleAdvance = () => {
+    setShowDiagnostic(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (authLoading || loading) {
     return (
@@ -246,16 +238,8 @@ const Stage1Page = () => {
                       <motion.div
                         key={msg.id}
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{
-                          opacity: messagesExiting ? 0 : 1,
-                          y: messagesExiting ? -20 : 0,
-                          scale: 1
-                        }}
-                        transition={{
-                          duration: messagesExiting ? 0.4 : 0.4,
-                          ease: "easeOut",
-                          delay: messagesExiting ? idx * 0.05 : 0
-                        }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
                         className="flex gap-3"
                       >
                         {/* Mentor avatar */}
@@ -278,7 +262,7 @@ const Stage1Page = () => {
                   </AnimatePresence>
 
                   {/* Typing indicator */}
-                  {visibleMessages < mentorMessages.length && !messagesExiting && (
+                  {visibleMessages < mentorMessages.length && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -291,6 +275,24 @@ const Stage1Page = () => {
                         <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </Card>
+                    </motion.div>
+                  )}
+
+                  {/* Advance button */}
+                  {showAdvanceButton && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex justify-center pt-4"
+                    >
+                      <Button
+                        onClick={handleAdvance}
+                        className="gap-2"
+                      >
+                        Ver meu Diagnóstico
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </motion.div>
                   )}
                 </motion.div>
@@ -421,15 +423,6 @@ const Stage1Page = () => {
                     </Card>
                   </motion.div>
 
-                  {/* Complete Stage Button */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="flex justify-center pt-4"
-                  >
-                    <StageCompleteButton stageNumber={1} />
-                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
