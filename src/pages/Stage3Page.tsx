@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdmin } from '@/hooks/useAdmin';
-import { useDev } from '@/hooks/useDev';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,8 +71,6 @@ const STAGE_3_SEEN_KEY = 'stage3_animation_seen';
 
 const Stage3Page = () => {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isDev, loading: devLoading } = useDev();
   const navigate = useNavigate();
   const { downloadFile, loading: downloadLoading } = useSignedUrl();
   const [funnel, setFunnel] = useState<Funnel | null>(null);
@@ -97,22 +93,16 @@ const Stage3Page = () => {
   }, []);
 
   useEffect(() => {
-    // Wait for all loading states
-    if (authLoading || adminLoading || devLoading) return;
+    // Wait for auth loading state
+    if (authLoading) return;
     
     if (!user) {
       navigate('/auth');
       return;
     }
 
-    // TEMPORARY: Block stage 3 for non-admin/dev users
-    if (!isAdmin && !isDev) {
-      navigate('/');
-      return;
-    }
-
     fetchFunnel();
-  }, [user, authLoading, adminLoading, devLoading, isAdmin, isDev, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchFunnel = async () => {
     try {
