@@ -24,6 +24,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBaseCV } from "@/hooks/useBaseCV";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useGenerationAbort } from "@/hooks/useGenerationAbort";
 
 export interface CVFormData {
   nome: string;
@@ -49,6 +50,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
   const { personalData, isLoading: isLoadingProfile } = useUserProfile();
   const { baseCV, isLoading: isLoadingBaseCV, saveBaseCV, hasBaseCV } = useBaseCV();
   const isMobile = useIsMobile();
+  const { isMounted } = useGenerationAbort();
   const [mobileStep, setMobileStep] = useState<1 | 2>(1);
   const [usingStoredCV, setUsingStoredCV] = useState(false);
   
@@ -153,6 +155,19 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
         body: { pdfBase64: base64 },
       });
 
+      // Server-side processing continues even if tab is in background
+      // Still save to database even if component unmounted - the call completed successfully
+      if (data?.experiencias || data?.educacao) {
+        const cvText = `EXPERIÊNCIAS PROFISSIONAIS:\n${data.experiencias || ""}\n\nEDUCAÇÃO:\n${data.educacao || ""}`;
+        await saveBaseCV(cvText, file.name);
+      }
+
+      // Only update UI state if component is still mounted
+      if (!isMounted()) {
+        console.log("CV extraction completed - data saved to database, UI state not updated (unmounted)");
+        return;
+      }
+
       if (error) throw new Error(error.message || "Erro ao processar PDF");
       if (data?.error) throw new Error(data.error);
 
@@ -162,13 +177,10 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
           experiences: data.experiencias || prev.experiences,
           educacao: data.educacao || prev.educacao,
         }));
-
-        // Save to database for persistence
-        const cvText = `EXPERIÊNCIAS PROFISSIONAIS:\n${data.experiencias || ""}\n\nEDUCAÇÃO:\n${data.educacao || ""}`;
-        await saveBaseCV(cvText, file.name);
+        
         setStoredFilename(file.name);
-
         setExtractionDone(true);
+        
         toast({
           title: "CV analisado e salvo!",
           description:
@@ -179,17 +191,21 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
       }
     } catch (error) {
       console.error("Error extracting PDF:", error);
-      toast({
-        title: "Erro ao analisar PDF",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Tente novamente ou use outro arquivo.",
-        variant: "destructive",
-      });
-      resetPdfInput();
+      if (isMounted()) {
+        toast({
+          title: "Erro ao analisar PDF",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Tente novamente ou use outro arquivo.",
+          variant: "destructive",
+        });
+        resetPdfInput();
+      }
     } finally {
-      setIsExtracting(false);
+      if (isMounted()) {
+        setIsExtracting(false);
+      }
     }
   };
 
