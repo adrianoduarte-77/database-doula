@@ -562,7 +562,7 @@ https://educacao-executiva.fgv.br/cursos/gratuitos"
               className="bg-secondary/30 min-h-[200px] font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              Cole o texto da trilha exatamente como quer que apareça. A IA irá organizar automaticamente.
+              Cole o texto da trilha exatamente como quer que apareça. Será organizado automaticamente.
             </p>
           </div>
 

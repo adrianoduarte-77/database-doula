@@ -25,7 +25,7 @@ serve(async (req) => {
     console.log("Chat request from user:", user.id, "messages:", messages?.length || 0, "context:", context);
 
     // Build system prompt based on context
-    let systemPrompt = `Você é a IA Mentora da plataforma Perfil Glorioso, especializada em desenvolvimento de carreira, criação de CVs profissionais e preparação para processos seletivos.
+    let systemPrompt = `Você é a Mentora da plataforma, especializada em desenvolvimento de carreira, criação de CVs profissionais e preparação para processos seletivos.
 
 Seu papel é:
 - Guiar os mentorados através das etapas do programa de mentoria
@@ -109,7 +109,7 @@ Você está ajudando o mentorado a se preparar para entrevistas.
       }
       
       return new Response(
-        JSON.stringify({ error: "Erro ao conectar com a IA. Tente novamente." }), 
+        JSON.stringify({ error: "Erro ao processar. Tente novamente." }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -122,7 +122,7 @@ Retorne APENAS as descrições formatadas, uma para cada experiência, no format
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
       console.error("No tool call in response:", data);
-      throw new Error("Resposta inválida da IA");
+      throw new Error("Resposta inválida do sistema");
     }
 
     const args = JSON.parse(toolCall.function.arguments);

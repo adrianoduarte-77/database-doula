@@ -522,12 +522,12 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Gerando com IA...
+                        Gerando...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        Gerar Cartas com IA
+                        Gerar Cartas
                       </>
                     )}
                   </Button>

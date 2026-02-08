@@ -251,7 +251,7 @@ const CVPage = () => {
       setCvData(fullCV);
       setViewState("preview");
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      toast({ title: "Currículo gerado com sucesso! 🎉", description: "Seu currículo foi criado com IA." });
+      toast({ title: "Currículo gerado com sucesso! 🎉", description: "Seu currículo foi criado." });
     } catch (error: any) {
       toast({ title: "Erro ao gerar currículo", description: error.message, variant: "destructive" });
     } finally {

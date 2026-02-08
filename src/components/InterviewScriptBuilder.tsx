@@ -70,7 +70,7 @@ interface InterviewScriptBuilderProps {
 const mentorMessages = [
   "Agora vem a parte mais importante: seus ROTEIROS. 🎯",
   "Primeiro, atribua cada palavra-chave à experiência mais relevante.",
-  "Depois a IA vai criar roteiros personalizados para cada uma!",
+  "Depois vou criar roteiros personalizados para cada uma!",
 ];
 
 const makeExperienceLabel = (exp: Pick<ManualExperience, 'role' | 'company'>) =>
@@ -295,7 +295,7 @@ export const InterviewScriptBuilder = ({
 
   const handleComplete = () => {
     if (generatedScripts.length === 0) {
-      toast.error("Gere os roteiros com IA primeiro.");
+      toast.error("Gere os roteiros primeiro.");
       return;
     }
     onComplete(generatedScripts);
@@ -515,7 +515,7 @@ export const InterviewScriptBuilder = ({
                       </div>
                       <div>
                         <h3 className="font-display font-semibold text-lg mb-1">
-                          Gerar Roteiros com IA
+                          Gerar Roteiros
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {getMappedCount() > 0 

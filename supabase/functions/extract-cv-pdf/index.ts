@@ -154,7 +154,7 @@ Por favor, extraia:
       console.error("extract-cv-pdf: AI gateway error", resp.status, t);
       if (resp.status === 429) return json({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }, 429);
       if (resp.status === 402) return json({ error: "Créditos insuficientes. Adicione créditos na sua conta." }, 402);
-      return json({ error: "Falha ao processar o currículo com IA." }, 500);
+      return json({ error: "Falha ao processar o currículo. Tente novamente." }, 500);
     }
 
     const data = await resp.json();
@@ -165,7 +165,7 @@ Por favor, extraia:
 
     if (!argsStr) {
       console.error("extract-cv-pdf: missing tool_calls", JSON.stringify(data)?.slice(0, 1000));
-      return json({ error: "A IA não retornou dados estruturados. Tente novamente." }, 500);
+      return json({ error: "Não foi possível processar os dados. Tente novamente." }, 500);
     }
 
     let parsed: { experiencias?: string; educacao?: string };
@@ -173,7 +173,7 @@ Por favor, extraia:
       parsed = JSON.parse(argsStr);
     } catch (e) {
       console.error("extract-cv-pdf: tool args parse error", e, argsStr?.slice(0, 500));
-      return json({ error: "Erro ao interpretar resposta da IA. Tente novamente." }, 500);
+      return json({ error: "Erro ao interpretar resposta. Tente novamente." }, 500);
     }
 
     const experiencias = (parsed.experiencias || "").toString().trim();

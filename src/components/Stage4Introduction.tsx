@@ -19,7 +19,7 @@ const messages = [
     highlight: true 
   },
   { 
-    text: "A IA vai criar roteiros personalizados para cada pergunta, usando SUAS histórias e conquistas reais.", 
+    text: "Vou criar roteiros personalizados para cada pergunta, usando SUAS histórias e conquistas reais.", 
     icon: Sparkles,
     highlight: true 
   },
