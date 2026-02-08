@@ -36,6 +36,7 @@ import { StageWarningModal } from "@/components/StageWarningModal";
 import WelcomeMentorModal from "@/components/WelcomeMentorModal";
 import { Stage3WelcomeModal } from "@/components/Stage3WelcomeModal";
 import LogoutModal from "@/components/LogoutModal";
+import { StageUnlockNotification } from "@/components/StageUnlockNotification";
 
 interface StageProgress {
   stage_number: number;
@@ -982,6 +983,15 @@ const Portal = () => {
       />
 
       <LogoutModal open={showLogoutModal} onComplete={handleLogoutComplete} />
+
+      {/* Stage unlock notification */}
+      <StageUnlockNotification
+        linkedinDiagnosticPublished={linkedinDiagnostic?.status === "published"}
+        stage2Unlocked={stage2Unlocked}
+        opportunityFunnelPublished={opportunityFunnel?.status === "published"}
+        hasInterviewHistory={savedInterviews.length > 0}
+        userId={user?.id}
+      />
     </div>
   );
 };
