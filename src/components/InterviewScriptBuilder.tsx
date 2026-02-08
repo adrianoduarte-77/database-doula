@@ -187,7 +187,13 @@ export const InterviewScriptBuilder = ({
     );
   };
 
+  const MAX_EXPERIENCES = 5;
+
   const addManualExperience = () => {
+    if (manualExperiences.length >= MAX_EXPERIENCES) {
+      toast.error(`Você pode adicionar no máximo ${MAX_EXPERIENCES} experiências.`);
+      return;
+    }
     const company = newCompany.trim();
     const role = newRole.trim();
     if (!company || !role) {
@@ -379,7 +385,7 @@ export const InterviewScriptBuilder = ({
                         Seus cargos (você cadastra)
                       </h4>
                       <span className="text-xs text-muted-foreground">
-                        {manualExperiences.length} cadastrado{manualExperiences.length === 1 ? "" : "s"}
+                        {manualExperiences.length}/{MAX_EXPERIENCES} cadastrado{manualExperiences.length === 1 ? "" : "s"}
                       </span>
                     </div>
 
@@ -409,9 +415,15 @@ export const InterviewScriptBuilder = ({
                     </div>
 
                     <div className="flex justify-end">
-                      <Button type="button" variant="secondary" onClick={addManualExperience} className="gap-2">
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        onClick={addManualExperience} 
+                        disabled={manualExperiences.length >= MAX_EXPERIENCES}
+                        className="gap-2"
+                      >
                         <Sparkles className="w-4 h-4" />
-                        Adicionar cargo
+                        {manualExperiences.length >= MAX_EXPERIENCES ? 'Limite atingido' : 'Adicionar cargo'}
                       </Button>
                     </div>
 
