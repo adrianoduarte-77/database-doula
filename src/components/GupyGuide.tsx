@@ -868,7 +868,7 @@ export const GupyGuide = () => {
             >
               <Card className="p-4 bg-primary/5 border-primary/20 max-w-xl mx-auto">
                 <p className="text-sm text-muted-foreground">
-                  💡 <strong>Dica:</strong> "MBA em Big Data para Negócios" → "Inteligência Artificial". 
+                  💡 <strong>Dica:</strong> "MBA em Big Data para Negócios" → "Big Data". 
                   Remova vírgulas, hífens e textos longos.
                 </p>
               </Card>

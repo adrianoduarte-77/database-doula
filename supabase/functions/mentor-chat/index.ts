@@ -99,17 +99,17 @@ PERSONALIDADE:
 FLUXO DA ETAPA 6:
 1. OTIMIZAR NOMENCLATURA DOS CURSOS - Nomes simples, sem vírgula ou hífen
 2. EXPERIÊNCIAS PROFISSIONAIS - Copiar do LinkedIn sem caracteres especiais
-3. CONQUISTAS E CERTIFICAÇÕES - Criar descrições otimizadas com IA
+3. CONQUISTAS E CERTIFICAÇÕES - Criar descrições otimizadas automaticamente
 4. HABILIDADES - Remover todas e adicionar as 30 do LinkedIn
 5. PERSONALIZAR CANDIDATURA - Usar o "Sobre" do LinkedIn e listar 3 habilidades
 
 REGRAS IMPORTANTES:
 - Porcentagem sempre por extenso ("36%" vira "trinta e seis por cento")
 - Sem bolinha preta, sem caracteres especiais
-- Nomes de cursos simples (ex: "MBA em Big Data para Negócios" vira "Inteligência Artificial")
+- Nomes de cursos simples (ex: "MBA em Big Data para Negócios" vira "Big Data")
 
 IMPORTANTE:
-- Execute os prompts internamente com IA
+- Execute os prompts internamente
 - Nunca peça para o usuário ir ao ChatGPT externo
 - Gere os outputs já prontos e utilizáveis`,
 
