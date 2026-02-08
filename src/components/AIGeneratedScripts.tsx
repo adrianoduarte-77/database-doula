@@ -134,7 +134,7 @@ export const AIGeneratedScripts = ({
     if (scripts.length === 0) {
       toast({
         title: "Gere os roteiros primeiro",
-        description: "Clique em 'Gerar Roteiros com IA' para começar.",
+        description: "Clique em 'Gerar Roteiros' para começar.",
         variant: "destructive",
       });
       return;
@@ -263,7 +263,7 @@ export const AIGeneratedScripts = ({
                         Pronto para criar seus roteiros?
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        A IA vai analisar suas experiências e criar roteiros personalizados para cada palavra-chave da vaga.
+                        Vou analisar suas experiências e criar roteiros personalizados para cada palavra-chave da vaga.
                       </p>
                     </div>
                     <Button
@@ -280,7 +280,7 @@ export const AIGeneratedScripts = ({
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5" />
-                          Gerar Roteiros com IA
+                          Gerar Roteiros
                         </>
                       )}
                     </Button>
@@ -293,7 +293,7 @@ export const AIGeneratedScripts = ({
                     <div className="text-sm">
                       <p className="font-medium text-foreground mb-1">Como funciona?</p>
                       <ul className="text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>A IA analisa seu perfil e experiências</li>
+                        <li>Seu perfil e experiências são analisados</li>
                         <li>Conecta cada palavra-chave com suas vivências reais</li>
                         <li>Cria roteiros na estrutura: O QUE + COMO + RESULTADO</li>
                         <li>Você pode editar e personalizar cada roteiro</li>

@@ -485,12 +485,12 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Gerando com IA...
+                        Gerando...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        Gerar Currículo com IA
+                        Gerar Currículo
                       </>
                     )}
                   </Button>
@@ -634,7 +634,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
             📎 Anexe o <strong>Currículo para ATS</strong> que você criou anteriormente
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            A IA irá extrair automaticamente suas experiências e formação para
+            Suas experiências e formação serão extraídas automaticamente para
             personalizar seu currículo.
           </p>
         </div>
@@ -673,7 +673,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
                   Analisando currículo...
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Extraindo experiências e educação com IA
+                  Extraindo experiências e educação
                 </p>
               </div>
             </div>
@@ -759,12 +759,12 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
           {isLoading ? (
             <>
               <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Gerando com IA...
+              Gerando...
             </>
           ) : (
             <>
               <Sparkles className="w-5 h-5" />
-              Gerar Currículo com IA
+              Gerar Currículo
             </>
           )}
         </Button>

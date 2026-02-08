@@ -640,7 +640,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                             <div>
                               <h4 className="font-medium mb-1">Digite seu tema ou ideia</h4>
                               <p className="text-sm text-muted-foreground">
-                                Escreva sobre o que você quer falar. A IA vai desenvolver um post completo com formatação profissional.
+                                Escreva sobre o que você quer falar. Vou desenvolver um post completo com formatação profissional.
                               </p>
                             </div>
                           </div>
@@ -715,7 +715,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 variants={staggerItem}
                 className="text-muted-foreground"
               >
-                A IA analisou o conteúdo e sugeriu esses temas. Escolha o que mais te interessa.
+                O conteúdo foi analisado e esses temas foram sugeridos. Escolha o que mais te interessa.
               </motion.p>
             </motion.div>
 
@@ -857,7 +857,7 @@ export const Stage7Guide = ({ stageNumber }: Stage7GuideProps) => {
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    Gerar Post com IA
+                    Gerar Post
                   </>
                 )}
               </Button>

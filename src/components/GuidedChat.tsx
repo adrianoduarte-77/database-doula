@@ -239,7 +239,7 @@ export const GuidedChat = ({ stageNumber }: GuidedChatProps) => {
             Etapa {stageNumber}: {config.title}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Chat guiado com IA
+            Chat guiado
           </p>
         </div>
       </div>

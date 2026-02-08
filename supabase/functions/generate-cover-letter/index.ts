@@ -186,7 +186,7 @@ Gere os 3 modelos de carta de apresentação seguindo as especificações.`;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
       console.error("No tool call in response:", JSON.stringify(data, null, 2));
-      throw new Error('Resposta inválida da IA');
+      throw new Error('Resposta inválida do sistema');
     }
 
     const result = JSON.parse(toolCall.function.arguments);

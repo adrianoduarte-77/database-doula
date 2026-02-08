@@ -59,7 +59,7 @@ const STEPS = [
   { id: 3, title: "Seu Perfil", icon: User, description: "Sobre você no LinkedIn" },
   { id: 4, title: "Experiências", icon: Briefcase, description: "Suas experiências" },
   { id: 5, title: "Sobre Você", icon: MessageSquare, description: "Me fale sobre você" },
-  { id: 6, title: "Palavras-Chave", icon: Target, description: "Análise da IA" },
+  { id: 6, title: "Palavras-Chave", icon: Target, description: "Análise automática" },
   { id: 7, title: "Roteiro", icon: Sparkles, description: "Roteiros de experiências" },
   { id: 8, title: "Perguntas", icon: MessageSquare, description: "Perguntas de fechamento" },
   { id: 9, title: "Treinamento", icon: Sparkles, description: "Material de preparação" },
@@ -688,7 +688,7 @@ Exemplo:
               </div>
               <h2 className="font-display text-2xl font-bold">Análise de Palavras-Chave</h2>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                A IA vai identificar as competências mais importantes da vaga
+                Vamos identificar as competências mais importantes da vaga
               </p>
             </div>
 
@@ -715,7 +715,7 @@ Exemplo:
                     
                     <div className="space-y-2">
                       <h3 className="font-medium text-lg">
-                        {isAnalyzing ? 'Analisando...' : 'Iniciar Análise com IA'}
+                        {isAnalyzing ? 'Analisando...' : 'Iniciar Análise'}
                       </h3>
                       <p className="text-sm text-muted-foreground max-w-sm">
                         {isAnalyzing 

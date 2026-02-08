@@ -975,10 +975,10 @@ export const GupyGuide = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.4 }}
             >
-              <Card className="p-4 bg-primary/5 border-primary/20 max-w-2xl mx-auto">
+            <Card className="p-4 bg-primary/5 border-primary/20 max-w-2xl mx-auto">
                 <p className="text-sm text-muted-foreground">
                   💡 <strong>Cole tudo aqui!</strong> Empresa, cargo e descrição exatamente como está no LinkedIn. 
-                  A IA vai formatar automaticamente para a Gupy.
+                  Será formatado automaticamente para a Gupy.
                 </p>
               </Card>
             </motion.div>
@@ -1024,7 +1024,7 @@ export const GupyGuide = () => {
                         )}
                       </div>
                       <Textarea
-                        placeholder="Cole aqui a descrição das atividades do LinkedIn (pode ter bullets, emojis, % — a IA vai formatar)"
+                        placeholder="Cole aqui a descrição das atividades do LinkedIn (pode ter bullets, emojis, % — será formatado automaticamente)"
                         value={item.descricao}
                         onChange={(e) => updateItem("experiencias", i, "descricao", e.target.value)}
                         rows={4}
@@ -1328,7 +1328,7 @@ export const GupyGuide = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.5 }}
               >
-                A IA vai criar descrições otimizadas para a Gupy
+                Vou criar descrições otimizadas para a Gupy
               </motion.p>
             </motion.div>
 
@@ -1506,13 +1506,13 @@ export const GupyGuide = () => {
                         ) : (
                           <>
                             <Sparkles className="w-5 h-5" />
-                            Gerar Descrições com IA
+                            Gerar Descrições
                           </>
                         )}
                       </Button>
                     </motion.div>
                     <p className="text-xs text-center text-muted-foreground mt-2">
-                      A IA vai criar descrições otimizadas com palavras-chave dos seus cargos-objetivo
+                      Serão criadas descrições otimizadas com palavras-chave dos seus cargos-objetivo
                     </p>
                   </motion.div>
                 )}
@@ -1768,7 +1768,7 @@ export const GupyGuide = () => {
         );
 
       case 9:
-        // Sobre Formatado - resultado da IA
+        // Sobre Formatado - resultado
         return (
           <motion.div
             key="step-9"
@@ -2114,7 +2114,7 @@ export const GupyGuide = () => {
                 errado ou simplesmente ignorar partes do seu texto.
               </p>
               <p className="text-foreground font-medium">
-                A IA vai apenas remover esses caracteres e converter porcentagens para texto 
+                Vamos apenas remover esses caracteres e converter porcentagens para texto 
                 (ex: 36% → trinta e seis por cento), mantendo todo o resto intacto.
               </p>
             </DialogDescription>
@@ -2141,15 +2141,15 @@ export const GupyGuide = () => {
             </DialogTitle>
             <DialogDescription className="space-y-3 pt-2">
               <p>
-                A IA vai criar <strong>descrições personalizadas</strong> para cada uma das suas 
+                Serão criadas <strong>descrições personalizadas</strong> para cada uma das suas 
                 conquistas e certificados.
               </p>
               <p>
-                Ela vai analisar seus <strong>cargos-objetivo</strong> e suas <strong>experiências</strong> para 
+                Seus <strong>cargos-objetivo</strong> e suas <strong>experiências</strong> serão analisados para 
                 inserir palavras-chave relevantes que aumentam suas chances de passar no ATS.
               </p>
               <p className="text-foreground font-medium">
-                Não se preocupe — a IA não vai inventar nada. Ela apenas vai otimizar a forma 
+                Não se preocupe — nada será inventado. Apenas otimizamos a forma 
                 como suas conquistas são apresentadas.
               </p>
             </DialogDescription>
@@ -2180,8 +2180,8 @@ export const GupyGuide = () => {
                 da candidatura.
               </p>
               <p>
-                A IA vai <strong>remover todos os emojis</strong> do seu texto e, se necessário, 
-                resumir de forma inteligente para caber no limite.
+                Serão <strong>removidos todos os emojis</strong> do seu texto e, se necessário, 
+                será resumido de forma inteligente para caber no limite.
               </p>
               <p className="text-foreground font-medium">
                 Seu texto atual tem {data.sobre?.length || 0} caracteres. 

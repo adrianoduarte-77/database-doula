@@ -405,7 +405,7 @@ export const Stage5Guide = ({ stageNumber }: Stage5GuideProps) => {
 
         toast({
           title: "Roteiros intensificados! 🚀",
-          description: "A IA adicionou detalhes técnicos aos seus roteiros.",
+          description: "Detalhes técnicos foram adicionados aos seus roteiros.",
         });
       }
     } catch (error) {
@@ -798,7 +798,7 @@ export const Stage5Guide = ({ stageNumber }: Stage5GuideProps) => {
               </div>
               <h2 className="font-display text-2xl font-bold">Roteiros Intensificados</h2>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                A IA adicionou detalhes técnicos sobre o COMO: ferramentas, metodologias e métricas.
+                Foram adicionados detalhes técnicos sobre o COMO: ferramentas, metodologias e métricas.
               </p>
               {selectedInterview && (
                 <Badge variant="outline" className="mt-2">
@@ -816,7 +816,7 @@ export const Stage5Guide = ({ stageNumber }: Stage5GuideProps) => {
                 </div>
                 <h3 className="font-display text-lg font-semibold mb-2">Intensificando roteiros...</h3>
                 <p className="text-sm text-muted-foreground text-center max-w-md">
-                  A IA está adicionando detalhes técnicos sobre ferramentas, metodologias e métricas aos seus roteiros.
+                  Estamos adicionando detalhes técnicos sobre ferramentas, metodologias e métricas aos seus roteiros.
                 </p>
               </div>
             )}
@@ -828,7 +828,7 @@ export const Stage5Guide = ({ stageNumber }: Stage5GuideProps) => {
                     <div className="flex gap-3">
                       <Sparkles className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-medium text-green-700 dark:text-green-300">Roteiros intensificados pela IA</p>
+                        <p className="font-medium text-green-700 dark:text-green-300">Roteiros intensificados</p>
                         <p className="text-muted-foreground mt-1">
                           Cada roteiro agora inclui detalhes técnicos que mostram seu MÉTODO ao gestor.
                           Use essas informações na sua apresentação!

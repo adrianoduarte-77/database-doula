@@ -74,7 +74,7 @@ const stages = [
   {
     number: 2,
     title: "Gerador de CV",
-    description: "Crie seu currículo estratégico com IA, otimizado para indicações diretas",
+    description: "Crie seu currículo estratégico, otimizado para indicações diretas",
     icon: FileText,
     path: "/cv",
     color: "from-primary to-accent",
@@ -119,7 +119,7 @@ const stages = [
   {
     number: 7,
     title: "Esteira de Conteúdos",
-    description: "Crie posts estratégicos para o LinkedIn com IA",
+    description: "Crie posts estratégicos para o LinkedIn",
     icon: PenTool,
     path: "/etapa/7",
     color: "from-pink-500 to-purple-500",

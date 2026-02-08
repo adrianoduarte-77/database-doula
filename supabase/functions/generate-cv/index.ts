@@ -200,7 +200,7 @@ REGRAS:
       console.error("generate-cv: AI gateway error", resp.status, t);
       if (resp.status === 429) return json({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }, 429);
       if (resp.status === 402) return json({ error: "Créditos insuficientes. Adicione créditos na sua conta." }, 402);
-      return json({ error: "Falha ao gerar currículo com IA." }, 500);
+      return json({ error: "Falha ao gerar currículo. Tente novamente." }, 500);
     }
 
     const data = await resp.json();
@@ -209,7 +209,7 @@ REGRAS:
 
     if (!argsStr) {
       console.error("generate-cv: missing tool_calls", JSON.stringify(data)?.slice(0, 500));
-      return json({ error: "A IA não retornou dados estruturados. Tente novamente." }, 500);
+      return json({ error: "Não foi possível processar os dados. Tente novamente." }, 500);
     }
 
     let cv: any;
@@ -217,7 +217,7 @@ REGRAS:
       cv = JSON.parse(argsStr);
     } catch (e) {
       console.error("generate-cv: tool args parse error", e, argsStr?.slice(0, 500));
-      return json({ error: "Erro ao interpretar resposta da IA. Tente novamente." }, 500);
+      return json({ error: "Erro ao interpretar resposta. Tente novamente." }, 500);
     }
 
     return json({ cv });
