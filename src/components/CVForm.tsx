@@ -19,6 +19,7 @@ import {
   Database,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GenerationWarning } from "@/components/GenerationWarning";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBaseCV } from "@/hooks/useBaseCV";
@@ -476,10 +477,12 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
                 </div>
 
                 <div className="pt-2 pb-6">
+                  <GenerationWarning type="cv-personalizado" isLoading={isLoading} />
+                  
                   <Button
                     type="submit"
                     variant="glow"
-                    className="w-full h-14 rounded-2xl text-base font-medium"
+                    className="w-full h-14 rounded-2xl text-base font-medium mt-4"
                     disabled={!isValid || isLoading || isExtracting}
                   >
                     {isLoading ? (
@@ -494,7 +497,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
                       </>
                     )}
                   </Button>
-                  {!isValid && (
+                  {!isValid && !isLoading && (
                     <p className="text-xs text-muted-foreground text-center mt-3">
                       {!extractionDone ? "Faça upload do seu currículo em PDF" : "Preencha a vaga alvo (mínimo 50 caracteres)"}
                     </p>
@@ -749,11 +752,13 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
       </div>
 
       <div className="pt-2">
+        <GenerationWarning type="cv-personalizado" isLoading={isLoading} />
+        
         <Button
           type="submit"
           variant="glow"
           size="lg"
-          className="w-full"
+          className="w-full mt-4"
           disabled={!isValid || isLoading || isExtracting}
         >
           {isLoading ? (
@@ -768,7 +773,7 @@ export function CVForm({ onGenerate, isLoading }: CVFormProps) {
             </>
           )}
         </Button>
-        {!isValid && (
+        {!isValid && !isLoading && (
           <p className="text-xs text-muted-foreground text-center mt-2">
             {!extractionDone
               ? "Faça upload do seu currículo em PDF e preencha a vaga alvo"

@@ -19,6 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GenerationWarning } from "@/components/GenerationWarning";
 import { supabase } from "@/integrations/supabase/client";
 import { ATSCVData, IdiomaItem } from "@/types/ats-cv";
 import { motion } from "framer-motion";
@@ -523,10 +524,12 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
 
                 {/* Submit Button */}
                 <div className="pt-6 pb-4">
+                  <GenerationWarning type="cv-ats" isLoading={isLoading} />
+                  
                   <Button
                     type="submit"
                     disabled={!isValid || isLoading}
-                    className="w-full gap-2.5 h-14 text-base font-medium rounded-2xl shadow-lg shadow-primary/25 disabled:shadow-none transition-all"
+                    className="w-full gap-2.5 h-14 text-base font-medium rounded-2xl shadow-lg shadow-primary/25 disabled:shadow-none transition-all mt-4"
                   >
                     {isLoading ? (
                       <>
@@ -540,7 +543,7 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
                       </>
                     )}
                   </Button>
-                  {!isValid && (
+                  {!isValid && !isLoading && (
                     <p className="text-sm text-muted-foreground/60 text-center mt-3">
                       Preencha experiências e formação para continuar
                     </p>
@@ -778,10 +781,12 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
         transition={{ delay: 0.15 }}
         className="pt-2 pb-2"
       >
+        <GenerationWarning type="cv-ats" isLoading={isLoading} />
+        
         <Button
           type="submit"
           disabled={!isValid || isLoading}
-          className="w-full gap-2.5 h-12 text-sm font-medium rounded-xl shadow-lg shadow-primary/20 disabled:shadow-none transition-shadow"
+          className="w-full gap-2.5 h-12 text-sm font-medium rounded-xl shadow-lg shadow-primary/20 disabled:shadow-none transition-shadow mt-4"
         >
           {isLoading ? (
             <>
@@ -795,7 +800,7 @@ export function ATSCVForm({ onGenerate, onBack }: ATSCVFormProps) {
             </>
           )}
         </Button>
-        {!isValid && (
+        {!isValid && !isLoading && (
           <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
             Preencha experiências e formação para continuar
           </p>
