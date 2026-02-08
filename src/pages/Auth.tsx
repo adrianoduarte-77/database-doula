@@ -234,7 +234,7 @@ const Auth = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     className="pl-10"
-                    placeholder="LocalizaÃ§Ã£o"
+                    placeholder="Localização"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
