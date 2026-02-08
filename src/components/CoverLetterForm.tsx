@@ -19,6 +19,7 @@ import {
 import { CoverLetterFormData } from "@/types/cover-letter";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { GenerationWarning } from "@/components/GenerationWarning";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBaseCV } from "@/hooks/useBaseCV";
@@ -512,11 +513,13 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                 </div>
 
                 <div className="pt-2 pb-6">
+                  <GenerationWarning type="carta" isLoading={isLoading} />
+                  
                   <Button
                     type="button"
                     onClick={handleSubmit}
                     variant="glow"
-                    className="w-full h-14 rounded-2xl text-base font-medium"
+                    className="w-full h-14 rounded-2xl text-base font-medium mt-4"
                     disabled={!isFormValid || isLoading || extractingCV}
                   >
                     {isLoading ? (
@@ -531,7 +534,7 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
                       </>
                     )}
                   </Button>
-                  {!isFormValid && (
+                  {!isFormValid && !isLoading && (
                     <p className="text-xs text-muted-foreground text-center mt-3">
                       Preencha Nome, Profissão e anexe seu CV
                     </p>
@@ -773,25 +776,29 @@ export function CoverLetterForm({ onGenerate, isLoading, onBack }: CoverLetterFo
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4">
-        {onBack && (
-          <Button variant="outline" onClick={onBack}>
-            Cancelar
-          </Button>
-        )}
-        <Button onClick={handleSubmit} disabled={!isFormValid || isLoading || extractingCV} className="gap-2">
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Gerando cartas...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Gerar 3 Modelos
-            </>
+      <div className="pt-4">
+        <GenerationWarning type="carta" isLoading={isLoading} />
+        
+        <div className="flex justify-end gap-3 mt-4">
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              Cancelar
+            </Button>
           )}
-        </Button>
+          <Button onClick={handleSubmit} disabled={!isFormValid || isLoading || extractingCV} className="gap-2">
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Gerando cartas...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Gerar 3 Modelos
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
