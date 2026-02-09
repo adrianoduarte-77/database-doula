@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StageNotification {
   stageNumber: number;
@@ -54,8 +55,7 @@ export const StageUnlockNotification = ({
   const navigate = useNavigate();
   const [notification, setNotification] = useState<StageNotification | null>(null);
   const [open, setOpen] = useState(false);
-
-  const STORAGE_KEY = `stage_notifications_seen_${userId}`;
+  const [seenStages, setSeenStages] = useState<Set<number> | null>(null);
 
   const getStagePaths: Record<number, string> = {
     1: '/etapa/1',
@@ -64,21 +64,29 @@ export const StageUnlockNotification = ({
     5: '/etapa/5',
   };
 
+  // Load seen notifications from database
   useEffect(() => {
     if (!userId) return;
 
-    const seenNotifications = (() => {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-      } catch {
-        return {};
-      }
-    })();
+    const loadSeen = async () => {
+      const { data } = await supabase
+        .from('stage_notifications_seen')
+        .select('stage_number')
+        .eq('user_id', userId);
 
-    // Check each stage in order of priority
+      const seen = new Set<number>((data || []).map((r: any) => r.stage_number));
+      setSeenStages(seen);
+    };
+
+    loadSeen();
+  }, [userId]);
+
+  // Check for notifications once seen data is loaded
+  useEffect(() => {
+    if (!userId || seenStages === null) return;
+
     const checkStageNotification = (stageNumber: number, isUnlocked: boolean) => {
-      if (isUnlocked && !seenNotifications[stageNumber]) {
+      if (isUnlocked && !seenStages.has(stageNumber)) {
         const notificationData = stageNotifications[stageNumber];
         if (notificationData) {
           setNotification({
@@ -93,31 +101,28 @@ export const StageUnlockNotification = ({
       return false;
     };
 
-    // Check stages in priority order (newest unlock first)
-    // Stage 5 (needs interview history)
     if (checkStageNotification(5, hasInterviewHistory)) return;
-    
-    // Stage 3 (funnel published)
     if (checkStageNotification(3, opportunityFunnelPublished)) return;
-    
-    // Stage 2 (unlocked by admin)
     if (checkStageNotification(2, stage2Unlocked)) return;
-    
-    // Stage 1 (linkedin diagnostic published)
     if (checkStageNotification(1, linkedinDiagnosticPublished)) return;
-    
-  }, [userId, linkedinDiagnosticPublished, stage2Unlocked, opportunityFunnelPublished, hasInterviewHistory]);
+  }, [userId, seenStages, linkedinDiagnosticPublished, stage2Unlocked, opportunityFunnelPublished, hasInterviewHistory]);
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (notification && userId) {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        const seenNotifications = stored ? JSON.parse(stored) : {};
-        seenNotifications[notification.stageNumber] = true;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seenNotifications));
-      } catch {
-        // Ignore storage errors
-      }
+      // Mark as seen in database
+      await supabase
+        .from('stage_notifications_seen')
+        .upsert(
+          { user_id: userId, stage_number: notification.stageNumber },
+          { onConflict: 'user_id,stage_number' }
+        );
+
+      // Update local state
+      setSeenStages((prev) => {
+        const next = new Set(prev);
+        next.add(notification.stageNumber);
+        return next;
+      });
     }
     setOpen(false);
     setNotification(null);
