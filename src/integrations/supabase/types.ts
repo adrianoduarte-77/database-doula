@@ -407,6 +407,27 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_notifications_seen: {
+        Row: {
+          id: string
+          seen_at: string
+          stage_number: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          seen_at?: string
+          stage_number: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          seen_at?: string
+          stage_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           admin_response: string | null
